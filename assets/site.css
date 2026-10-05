@@ -305,12 +305,15 @@ p { margin: 0; }
 }
 
 /* Looks */
-.looks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 2vw, 24px); margin-top: clamp(36px, 5vw, 56px); }
+.looks { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(12px, 2vw, 24px); margin-top: clamp(36px, 5vw, 56px); }
 .look { display: grid; gap: 10px; margin: 0; }
 .look img { border-radius: clamp(14px, 2.4vw, 28px); border: 1px solid var(--rule); aspect-ratio: 1206 / 2622; object-fit: cover; width: 100%; }
 .look figcaption { display: grid; gap: 2px; }
 .look figcaption span:last-child { font-size: 0.88rem; opacity: 0.85; }
-@media (max-width: 820px) { .looks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 820px) {
+  .looks { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; }
+  .look { flex: 0 0 46%; scroll-snap-align: start; }
+}
 
 /* Trailer */
 .trailer { margin-top: clamp(32px, 5vw, 48px); border: 1px solid var(--ink); background: var(--stage); }
