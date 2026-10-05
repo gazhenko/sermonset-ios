@@ -56,6 +56,7 @@ struct PlayerPanel: View {
                     }
                     .buttonStyle(LookIconButtonStyle(size: 68, prominent: true))
                     .accessibilityLabel(isLoaded && playback.isPlaying ? "Pause" : "Play")
+                    .accessibilityIdentifier("player.play")
                     Spacer()
                     Button { skip(30) } label: { Image(systemName: "goforward.30") }
                         .buttonStyle(LookIconButtonStyle(size: 46))

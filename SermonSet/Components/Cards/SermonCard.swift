@@ -65,6 +65,7 @@ struct CardStage: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(showingBack ? model.accessibilityBack : model.accessibilitySummary)
             .accessibilityHint("Double-tap to turn the card over.")
+            .accessibilityIdentifier("card.stage")
             .accessibilityAddTraits(.isButton)
     }
 
