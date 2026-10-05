@@ -274,7 +274,8 @@ p { margin: 0; }
   justify-items: start;
   padding-left: clamp(24px, 18%, 260px);
 }
-.stage-paint { position: absolute; inset: -24px; width: calc(100% + 48px); height: calc(100% + 48px); object-fit: cover; filter: blur(3px) saturate(1.05); }
+/* The painting in four flat inks, one image pixel per dither cell, scaled up without smoothing. */
+.stage-paint { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
 .stage-phone {
   position: relative;
   width: min(300px, 62vw);
@@ -289,9 +290,10 @@ p { margin: 0; }
   position: absolute;
   left: 16px; bottom: 14px;
   color: #F4F4F1;
+  background: #1B1640;
+  padding: 4px 8px;
   font: 500 0.72rem/1.3 var(--text);
   letter-spacing: 0.04em;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
 }
 @media (max-width: 640px) { .stage { aspect-ratio: auto; min-height: 560px; justify-items: center; padding-left: 0; } }
 
@@ -382,12 +384,36 @@ p { margin: 0; }
 .doc ul { padding-left: 1.2em; display: grid; gap: 8px; }
 .doc .label { margin-top: 18px; }
 
-/* One orchestrated moment: the name prints itself in, and dithered plates develop as they arrive. */
+/* Motion: the name prints itself in, and each picture glitches in through the Bayer screen (site.js). */
 @media (prefers-reduced-motion: no-preference) {
   .js .hero-word span { transform: translateY(0.35em); opacity: 0; animation: rise 0.9s cubic-bezier(.2, .8, .2, 1) forwards; animation-delay: calc(var(--i) * 70ms + 80ms); }
-  .js .develop { clip-path: inset(0 0 100% 0); transition: clip-path 1.2s steps(24, end); }
-  .js .develop.in { clip-path: inset(0 0 0 0); }
+  .js .develop:not(.in) { opacity: 0; }
 }
+.glitch { position: absolute; left: 0; width: 100%; overflow: hidden; pointer-events: none; z-index: 30; }
+.glitch > * { position: absolute; max-width: none; margin: 0; }
+
+/* Dither: panel edges and the footer word thin out through a 4×4 Bayer screen (tools/site/fades.py). */
+.panel { position: relative; --edge: 32px; }
+.panel::before, .panel::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: var(--edge);
+  background: var(--paper);
+  pointer-events: none;
+  -webkit-mask: url("dither/fade-16.png") 0 0 / calc(var(--edge) / 4) var(--edge) repeat-x;
+  mask: url("dither/fade-16.png") 0 0 / calc(var(--edge) / 4) var(--edge) repeat-x;
+}
+.panel::before { top: 0; }
+.panel::after { bottom: 0; transform: scaleY(-1); }
+@media (min-width: 1000px) { .panel { --edge: 48px; } }
+
+.footer-word {
+  --band: 120px; --rows: 40; --tile: url("dither/fade-40.png");
+  -webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - var(--band)) no-repeat, var(--tile) bottom / calc(var(--band) * 4 / var(--rows)) var(--band) repeat-x;
+  mask: linear-gradient(#000 0 0) top / 100% calc(100% - var(--band)) no-repeat, var(--tile) bottom / calc(var(--band) * 4 / var(--rows)) var(--band) repeat-x;
+}
+@media (max-width: 900px) { .footer-word { --band: 48px; --rows: 16; --tile: url("dither/fade-16.png"); } }
 @keyframes rise { to { transform: none; opacity: 1; } }
 .stamp-front { fill: var(--paper); }
 
