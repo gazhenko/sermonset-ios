@@ -23,6 +23,10 @@ struct SermonSetApp: App {
         } else {
             lookLabSide = nil
         }
+        // Seeds the saved look without pinning it (a `-SermonSetLook` argument pins it for the launch).
+        if let index = args.firstIndex(of: "-SermonSetInitialLook"), args.indices.contains(index + 1) {
+            UserDefaults.standard.set(args[index + 1], forKey: LookID.storageKey)
+        }
         if args.contains("-SermonSetPreviewData") || args.contains("-SermonSetSkipOnboarding") {
             UserDefaults.standard.set(true, forKey: "SermonSetOnboarded")
         }
