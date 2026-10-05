@@ -1,0 +1,82 @@
+name: SermonSet
+options:
+  minimumXcodeGenVersion: 2.46.0
+  deploymentTarget:
+    iOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+packages:
+  SermonSetCore:
+    path: Packages/SermonSetCore
+targets:
+  SermonSet:
+    type: application
+    platform: iOS
+    sources:
+      - path: SermonSet
+        excludes:
+          - Support/Info.plist
+          - Resources
+      - path: SermonSet/Resources
+        buildPhase: resources
+        optional: true
+    dependencies:
+      - package: SermonSetCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gazhenko.sermonset
+        INFOPLIST_FILE: SermonSet/Support/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
+        ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES: "AppIcon-Rubric AppIcon-Vespers AppIcon-Lumen"
+  SermonSetUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - SermonSetUITests
+    dependencies:
+      - target: SermonSet
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gazhenko.sermonset.uitests
+        GENERATE_INFOPLIST_FILE: YES
+  SermonSetCoreChecks:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Packages/SermonSetCore/Tests/SermonSetCoreTests
+    dependencies:
+      - package: SermonSetCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gazhenko.sermonset.corechecks
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  SermonSet:
+    build:
+      targets:
+        SermonSet: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - package: SermonSetCore/SermonSetCoreTests
+        - SermonSetUITests
+  SermonSetCore:
+    build:
+      targets:
+        SermonSetCoreChecks: all
+    test:
+      config: Debug
+      targets:
+        - SermonSetCoreChecks

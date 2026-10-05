@@ -1,0 +1,397 @@
+{
+  "notice": "All people, churches, and sermons in this file are fictional samples written for the SermonSet prototype. City coordinates are public city centers, never a church or person.",
+  "sermons": [
+    {
+      "slug": "peace-in-the-storm",
+      "title": "Peace in the Storm",
+      "preacher": "Jonah Reed",
+      "voice": "am_michael",
+      "venue": { "churchName": "Grace Harbor", "city": "Portland", "region": "OR", "country": "US", "latitude": 45.5152, "longitude": -122.6784, "precision": "city" },
+      "serviceDate": "2026-08-30",
+      "primaryPassage": "Mark 4:35–41",
+      "sermonType": "hope",
+      "themes": ["Fear", "Presence"],
+      "summary": "Peace is found in Christ’s presence, not the absence of storms.",
+      "reflectionPrompt": "What fear are you ready to surrender?",
+      "trustState": "communityMatched",
+      "rightsState": "audioAuthorized",
+      "segments": [
+        "Good morning, church. Go ahead and open with me to Mark chapter 4, starting in verse 35.",
+        "It's evening. Jesus has been teaching all day, and he says to his friends, let's go over to the other side.",
+        "So they push off, and somewhere in the middle of that lake, a storm comes down on them. The waves are breaking into the boat. It's filling with water.",
+        "And here's the detail I love. Jesus is in the back of the boat, asleep on a cushion.",
+        "The disciples wake him up, and they ask the question a lot of us have asked. Teacher, don't you care that we're drowning?",
+        "Notice that the storm came while they were doing exactly what Jesus asked them to do. Obedience did not exempt them from the wind.",
+        "Some of you came in this morning thinking, if I were really following God, this wouldn't be so hard. But the boat was his idea.",
+        "Jesus gets up, and he speaks to the wind and the sea. Peace. Be still. And the wind stops, and there is a great calm.",
+        "Then he turns to them and asks, why are you so afraid? Do you still have no faith?",
+        "He isn't shaming them. He's showing them that the one who was asleep in the boat was never in danger of losing them.",
+        "Here's the big idea this morning. Peace is not the absence of the storm. Peace is the presence of Jesus in the boat.",
+        "Psalm 46 says, be still, and know that I am God. Stillness isn't pretending the waves aren't real. It's remembering who is with you in them.",
+        "So this week, when the wind picks up, I want you to try something simple. Say his name before you say your fear.",
+        "Let's pray."
+      ],
+      "lowConfidenceSegments": [8],
+      "outline": [
+        { "title": "The boat was his idea", "segment": 1 },
+        { "title": "Storms on the obedient road", "segment": 5 },
+        { "title": "Peace, be still", "segment": 7 },
+        { "title": "Presence, not absence", "segment": 10 }
+      ],
+      "takeaways": [
+        { "text": "The storm arrived while the disciples were doing what Jesus asked. Obedience does not exempt anyone from hardship.", "segments": [5, 6] },
+        { "text": "Peace is described as Jesus’ presence in the boat, not the absence of the storm.", "segments": [10] },
+        { "text": "A practice for the week: say his name before you say your fear.", "segments": [12] }
+      ],
+      "scriptureReferences": ["Mark 4:35–41", "Psalm 46:10"],
+      "sampleMoments": [
+        { "segment": 5, "note": "Obedience didn’t exempt them. Needed this." },
+        { "segment": 10, "note": null }
+      ],
+      "sampleNotes": ["Thinking about the move to Seattle. “The boat was his idea” — I keep coming back to that."]
+    },
+    {
+      "slug": "when-faith-gets-loud",
+      "title": "When Faith Gets Loud",
+      "preacher": "Maya Brooks",
+      "voice": "af_heart",
+      "venue": { "churchName": "Mosaic Church", "city": "Atlanta", "region": "GA", "country": "US", "latitude": 33.749, "longitude": -84.388, "precision": "city" },
+      "serviceDate": "2026-08-23",
+      "primaryPassage": "Romans 12:1–2",
+      "sermonType": "courage",
+      "themes": ["Worship", "Transformation"],
+      "summary": "A transformed life becomes a visible act of worship.",
+      "reflectionPrompt": "Where is faith asking you to be seen?",
+      "trustState": "churchVerified",
+      "rightsState": "officialAudio",
+      "segments": [
+        "Alright, Mosaic. We are in Romans chapter 12 this morning, verses 1 and 2.",
+        "Paul has just spent eleven chapters on what God has done. And now he turns the corner with one small word. Therefore.",
+        "Therefore, in view of God's mercy, offer your bodies as a living sacrifice. That is your true and proper worship.",
+        "I want you to hear how physical that is. Not your thoughts. Not your playlist. Your body. Your Tuesday. Your hands and your calendar.",
+        "Worship was never meant to stay inside these walls. It is supposed to get loud in the places where you actually live.",
+        "And then verse 2. Do not be conformed to the pattern of this world, but be transformed by the renewing of your mind.",
+        "Conformed is what happens when you are pressed into a shape by the pressure around you. Like clay in a mold.",
+        "Transformed is a different word. It's the word for metamorphosis. It works from the inside out.",
+        "So the question isn't, how do I look different? It's, what is God renewing in how I think?",
+        "Loud faith is not about volume. Some of the loudest faith I've ever seen was quiet. A nurse who prays on her break. A kid who sits with the new student at lunch.",
+        "It's loud because it's visible. It costs something. It can be seen.",
+        "Here's the big idea. A transformed life becomes a visible act of worship.",
+        "So where is faith asking you to be seen this week? Not to be impressive. Just to be honest about who you belong to.",
+        "Let's stand and respond together."
+      ],
+      "lowConfidenceSegments": [7],
+      "outline": [
+        { "title": "Therefore: mercy first", "segment": 1 },
+        { "title": "A living sacrifice", "segment": 2 },
+        { "title": "Conformed or transformed", "segment": 5 },
+        { "title": "Loud means visible", "segment": 9 }
+      ],
+      "takeaways": [
+        { "text": "Paul grounds the call to worship in God’s mercy before asking anything of the listener.", "segments": [1, 2] },
+        { "text": "Being conformed comes from outside pressure; being transformed works from the inside out through a renewed mind.", "segments": [6, 7, 8] },
+        { "text": "Loud faith is described as visible and costly rather than high-volume.", "segments": [9, 10] }
+      ],
+      "scriptureReferences": ["Romans 12:1–2"],
+      "sampleMoments": [
+        { "segment": 3, "note": "Your Tuesday." },
+        { "segment": 9, "note": "The nurse who prays on her break" }
+      ],
+      "sampleNotes": ["Ask Dani about the Tuesday night thing at the shelter."]
+    },
+    {
+      "slug": "open-hands",
+      "title": "Open Hands",
+      "preacher": "Micah Chen",
+      "voice": "am_puck",
+      "venue": { "churchName": "Citylight", "city": "Minneapolis", "region": "MN", "country": "US", "latitude": 44.9778, "longitude": -93.265, "precision": "city" },
+      "serviceDate": "2026-08-16",
+      "primaryPassage": "Matthew 6:25–34",
+      "sermonType": "grace",
+      "themes": ["Worry", "Trust"],
+      "summary": "Trust loosens our grip on what tomorrow might bring.",
+      "reflectionPrompt": "What are you holding too tightly?",
+      "trustState": "communityMatched",
+      "rightsState": "audioAuthorized",
+      "segments": [
+        "Hey, Citylight. If you've got a Bible, turn to Matthew chapter 6. We're picking up in verse 25.",
+        "Jesus says, therefore I tell you, do not worry about your life, what you will eat or drink, or about your body, what you will wear.",
+        "Now, I'll be honest. When I read that, my first reaction is, easy for you to say. Rent is due on the first.",
+        "But Jesus doesn't say this from a distance. He says it to people who lived one bad harvest away from hunger.",
+        "Look at the birds of the air, he says. They don't sow or reap or store in barns, and yet your heavenly Father feeds them.",
+        "Consider the lilies of the field. They don't labor or spin. And not even Solomon in all his splendor was dressed like one of these.",
+        "Worry is what happens when we try to hold tomorrow in hands that were made for today.",
+        "Can any one of you, by worrying, add a single hour to your life? The honest answer is no. It usually takes a few.",
+        "So Jesus gives us a different posture. Seek first the kingdom of God and his righteousness, and all these things will be given to you as well.",
+        "Seek first doesn't mean seek only. It means order. It means God gets the first grip, and we hold everything else a little more loosely.",
+        "I've started praying with my hands open. Literally. Palms up. It feels a little awkward. It's supposed to.",
+        "Here's the big idea. Trust loosens our grip on what tomorrow might bring.",
+        "Do not worry about tomorrow, for tomorrow will worry about itself. Each day has enough trouble of its own.",
+        "So what are you holding too tightly right now? Let's bring it to him."
+      ],
+      "lowConfidenceSegments": [4],
+      "outline": [
+        { "title": "Easy for you to say?", "segment": 2 },
+        { "title": "Birds and lilies", "segment": 4 },
+        { "title": "Seek first is about order", "segment": 8 },
+        { "title": "Palms up", "segment": 10 }
+      ],
+      "takeaways": [
+        { "text": "Jesus spoke about worry to people with real material insecurity, not from a distance.", "segments": [3] },
+        { "text": "Seeking the kingdom first is framed as an order of priorities, not a call to ignore daily needs.", "segments": [8, 9] },
+        { "text": "A suggested practice: praying with open hands as a physical sign of trust.", "segments": [10] }
+      ],
+      "scriptureReferences": ["Matthew 6:25–34"],
+      "sampleMoments": [
+        { "segment": 6, "note": "Hands made for today" },
+        { "segment": 10, "note": null }
+      ],
+      "sampleNotes": ["Try the palms-up prayer before work this week."]
+    },
+    {
+      "slug": "built-in-the-waiting",
+      "title": "Built in the Waiting",
+      "preacher": "Elias Warren",
+      "voice": "am_fenrir",
+      "venue": { "churchName": "New City", "city": "Toronto", "region": "ON", "country": "CA", "latitude": 43.6532, "longitude": -79.3832, "precision": "city" },
+      "serviceDate": "2026-08-09",
+      "primaryPassage": "Psalm 27",
+      "sermonType": "wisdom",
+      "themes": ["Waiting", "Formation"],
+      "summary": "Waiting is not wasted when it is shaping who we become.",
+      "reflectionPrompt": "What could God be forming in this pause?",
+      "trustState": "churchVerified",
+      "rightsState": "audioAuthorized",
+      "segments": [
+        "Good morning. We're spending some time today in Psalm 27, a psalm of David.",
+        "It opens with confidence. The Lord is my light and my salvation. Whom shall I fear?",
+        "But if you keep reading, the tone changes. Hear me, Lord, when I call. Do not hide your face from me.",
+        "In the same song, David moves from certainty to longing. And I find that strangely comforting.",
+        "Because most of us live in the middle of that psalm. We believe, and we're still waiting.",
+        "Waiting on a diagnosis. Waiting on a job. Waiting for a prodigal to come home. Waiting for the grief to lift.",
+        "We usually treat waiting like a hallway. Something to rush through on the way to the room where life happens.",
+        "But in scripture, the waiting is often the room. It's where God does some of his most patient work.",
+        "David says, one thing I ask of the Lord, this is what I seek. That I may dwell in the house of the Lord and gaze on his beauty.",
+        "In the waiting, his request got smaller and deeper at the same time. Not ten things. One thing.",
+        "And then the last verse. Wait for the Lord. Be strong and take heart, and wait for the Lord.",
+        "He says it twice. Maybe because he knew we'd need to hear it twice.",
+        "Here's the big idea. Waiting is not wasted when it is shaping who we become.",
+        "So let me ask you. What could God be forming in you, in this pause?"
+      ],
+      "lowConfidenceSegments": [8],
+      "outline": [
+        { "title": "Light and salvation", "segment": 1 },
+        { "title": "The middle of the psalm", "segment": 4 },
+        { "title": "The waiting is the room", "segment": 6 },
+        { "title": "One thing", "segment": 8 }
+      ],
+      "takeaways": [
+        { "text": "Psalm 27 holds confidence and longing together, which mirrors believing while still waiting.", "segments": [3, 4] },
+        { "text": "Waiting is presented as a place where God works, not just a hallway to pass through.", "segments": [6, 7] },
+        { "text": "In waiting, David’s request narrows to one thing: to dwell with God and see his beauty.", "segments": [8, 9] }
+      ],
+      "scriptureReferences": ["Psalm 27"],
+      "sampleMoments": [
+        { "segment": 7, "note": "The waiting is the room." },
+        { "segment": 11, "note": null }
+      ],
+      "sampleNotes": ["Mom’s appointment is Thursday. One thing."]
+    },
+    {
+      "slug": "the-table-gets-wider",
+      "title": "The Table Gets Wider",
+      "preacher": "Nia Grant",
+      "voice": "af_bella",
+      "venue": { "churchName": "Common Ground", "city": "Chicago", "region": "IL", "country": "US", "latitude": 41.8781, "longitude": -87.6298, "precision": "city" },
+      "serviceDate": "2026-08-02",
+      "primaryPassage": "Luke 14:15–24",
+      "sermonType": "mission",
+      "themes": ["Hospitality", "Invitation"],
+      "summary": "Grace keeps making room for people we did not expect.",
+      "reflectionPrompt": "Who might need an invitation from you?",
+      "trustState": "communityMatched",
+      "rightsState": "audioAuthorized",
+      "segments": [
+        "Common Ground, good morning. Let's go to Luke chapter 14, verse 15.",
+        "Jesus is at a dinner party at the house of a prominent religious leader. Everyone is watching where everyone sits.",
+        "And someone at the table says, blessed is the one who will eat at the feast in the kingdom of God. It's a nice thing to say at dinner.",
+        "So Jesus tells a story. A man is preparing a great banquet, and he invites many guests.",
+        "But when the food is ready, the excuses start. I just bought a field. I just bought five yoke of oxen. I just got married.",
+        "Every excuse is reasonable. That's what makes them dangerous. None of them are bad things. They're just more important things.",
+        "So the master says to his servant, go out quickly into the streets and alleys of the town, and bring in the poor, the crippled, the blind, and the lame.",
+        "And the servant comes back and says, it's done. And there is still room.",
+        "Church, I want that sentence over our doors. There is still room.",
+        "Then go out to the roads and the country lanes, and compel them to come in, so that my house will be full.",
+        "The table in this story doesn't get more exclusive. It keeps getting wider.",
+        "Here's the big idea. Grace keeps making room for people we did not expect.",
+        "And if grace made room for us, then our tables, our group chats, our Sunday lunches, can get a little wider too.",
+        "Who might need an invitation from you this week?"
+      ],
+      "lowConfidenceSegments": [9],
+      "outline": [
+        { "title": "Watching the seating chart", "segment": 1 },
+        { "title": "Reasonable excuses", "segment": 4 },
+        { "title": "There is still room", "segment": 7 },
+        { "title": "Wider tables", "segment": 10 }
+      ],
+      "takeaways": [
+        { "text": "The guests’ excuses were reasonable, which is what made them easy to accept.", "segments": [5] },
+        { "text": "The master’s response to refusal is to widen the invitation, not shrink the feast.", "segments": [6, 7, 10] },
+        { "text": "An application: let ordinary tables — meals, group chats, Sunday lunch — get wider.", "segments": [12] }
+      ],
+      "scriptureReferences": ["Luke 14:15–24"],
+      "sampleMoments": [
+        { "segment": 8, "note": "There is still room." },
+        { "segment": 12, "note": "Group chat!" }
+      ],
+      "sampleNotes": ["Invite the new neighbors for Sunday lunch."]
+    },
+    {
+      "slug": "start-where-you-are",
+      "title": "Start Where You Are",
+      "preacher": "Jordan Ellis",
+      "voice": "am_liam",
+      "venue": { "churchName": "Anchor Church", "city": "Nashville", "region": "TN", "country": "US", "latitude": 36.1627, "longitude": -86.7816, "precision": "city" },
+      "serviceDate": "2026-07-26",
+      "primaryPassage": "James 2:14–18",
+      "sermonType": "conviction",
+      "themes": ["Action", "Faith"],
+      "summary": "Faith becomes tangible through the next faithful action.",
+      "reflectionPrompt": "What is one good thing you can begin today?",
+      "trustState": "communityMatched",
+      "rightsState": "audioAuthorized",
+      "segments": [
+        "Morning, Anchor. Grab your Bible and meet me in James chapter 2, verse 14.",
+        "James is the brother of Jesus, and he writes like a big brother. Short sentences. No wasted words.",
+        "What good is it, my brothers and sisters, if someone claims to have faith but has no deeds? Can such faith save them?",
+        "Then he gives an example that's almost uncomfortable. Someone is without clothes and daily food.",
+        "And you say to them, go in peace, keep warm and well fed. But you do nothing about their physical needs. What good is it?",
+        "I've said go in peace. I've said I'll be praying for you, and meant it, and then gone home and done nothing else.",
+        "James isn't saying we earn grace by good works. He's saying living faith moves. It has a pulse.",
+        "In the same way, faith by itself, if it is not accompanied by action, is dead.",
+        "And here's what I think keeps a lot of us stuck. We wait until we can do something big.",
+        "We want to fix the whole problem, so we don't touch any part of it.",
+        "But James never asks for the whole problem. He asks about the person in front of you. Clothes. Food. Today.",
+        "Show me your faith without deeds, he says, and I will show you my faith by my deeds.",
+        "Here's the big idea. Faith becomes tangible through the next faithful action. Not the biggest one. The next one.",
+        "So what is one good thing you can begin today? Start where you are."
+      ],
+      "lowConfidenceSegments": [11],
+      "outline": [
+        { "title": "A big brother’s letter", "segment": 1 },
+        { "title": "Go in peace, and do nothing?", "segment": 3 },
+        { "title": "Living faith moves", "segment": 6 },
+        { "title": "The next faithful action", "segment": 10 }
+      ],
+      "takeaways": [
+        { "text": "James distinguishes earning grace from living faith: genuine faith shows up in action.", "segments": [6, 7] },
+        { "text": "Waiting to do something big can keep people from doing anything at all.", "segments": [8, 9] },
+        { "text": "James focuses on the person in front of you and their immediate needs.", "segments": [10] }
+      ],
+      "scriptureReferences": ["James 2:14–18"],
+      "sampleMoments": [
+        { "segment": 5, "note": "Ouch. I’ve done this." },
+        { "segment": 12, "note": null }
+      ],
+      "sampleNotes": ["Drop off the coats at the shelter on Saturday."]
+    },
+    {
+      "slug": "songs-in-the-night",
+      "title": "Songs in the Night",
+      "preacher": "Ruth Okafor",
+      "voice": "af_sarah",
+      "venue": { "churchName": "Harbor & Vine", "city": "Charleston", "region": "SC", "country": "US", "latitude": 32.7765, "longitude": -79.9311, "precision": "city" },
+      "serviceDate": "2026-09-13",
+      "primaryPassage": "Acts 16:25–34",
+      "sermonType": "worship",
+      "themes": ["Praise", "Endurance"],
+      "summary": "Worship in the dark declares who God is before we see what he will do.",
+      "reflectionPrompt": "What song do you need to sing before morning?",
+      "trustState": "churchVerified",
+      "rightsState": "officialAudio",
+      "segments": [
+        "Good evening, Harbor and Vine. Turn with me to Acts chapter 16. We'll start at verse 25.",
+        "Paul and Silas have been beaten with rods and thrown into the inner cell of a prison. Their feet are fastened in stocks.",
+        "And the text says, about midnight, Paul and Silas were praying and singing hymns to God, and the other prisoners were listening to them.",
+        "I want you to sit with that. It's midnight. Nothing has changed yet. And they are singing.",
+        "We tend to think worship is the response to the rescue. Here, worship comes before anything moves.",
+        "And the other prisoners were listening. Your song in the night is never only for you. Someone in the next cell is listening.",
+        "Suddenly there was a great earthquake. The foundations were shaken, every door flew open, and everyone's chains came loose.",
+        "The jailer wakes up, sees the doors open, and assumes the worst. He draws his sword.",
+        "And Paul shouts, don't harm yourself. We are all here.",
+        "Think about that. The doors are open, and they stay. Because the jailer mattered more than the exit.",
+        "The jailer asks, what must I do to be saved? And that night, his whole household is baptized, and he sets a meal before them, filled with joy.",
+        "The night that began in chains ends at a kitchen table.",
+        "Here's the big idea. Worship in the dark is not denial. It's declaring who God is before you can see what he'll do.",
+        "So what song do you need to sing before morning comes?"
+      ],
+      "lowConfidenceSegments": [6],
+      "outline": [
+        { "title": "Midnight in the inner cell", "segment": 1 },
+        { "title": "Worship before rescue", "segment": 4 },
+        { "title": "Someone is listening", "segment": 5 },
+        { "title": "From chains to a kitchen table", "segment": 10 }
+      ],
+      "takeaways": [
+        { "text": "In this passage, worship happens before circumstances change, not only after rescue.", "segments": [3, 4] },
+        { "text": "Worship in hard seasons has an audience: others are listening.", "segments": [5] },
+        { "text": "Paul and Silas stay when the doors open because the jailer’s life mattered more than escape.", "segments": [8, 9] }
+      ],
+      "scriptureReferences": ["Acts 16:25–34"],
+      "sampleMoments": [
+        { "segment": 5, "note": "Someone in the next cell is listening." },
+        { "segment": 11, "note": null }
+      ],
+      "sampleNotes": []
+    },
+    {
+      "slug": "breakfast-on-the-shore",
+      "title": "Breakfast on the Shore",
+      "preacher": "Daniel Ortiz",
+      "voice": "am_eric",
+      "venue": { "churchName": "Riverside Fellowship", "city": "Denver", "region": "CO", "country": "US", "latitude": 39.7392, "longitude": -104.9903, "precision": "city" },
+      "serviceDate": "2026-09-27",
+      "primaryPassage": "John 21:1–19",
+      "sermonType": "restoration",
+      "themes": ["Forgiveness", "Calling"],
+      "summary": "Jesus restores us where we failed, then hands us something to carry.",
+      "reflectionPrompt": "Where might he be building a fire for you?",
+      "trustState": "communityMatched",
+      "rightsState": "audioAuthorized",
+      "segments": [
+        "Riverside, good morning. We're in John chapter 21, the last chapter of the gospel.",
+        "After the resurrection, Peter tells the others, I'm going fishing. It's the most ordinary sentence in the book.",
+        "He's going back to what he knew before Jesus called him. Because after you've failed someone, the old life can feel safer.",
+        "They fish all night and catch nothing. And at dawn, a man on the shore calls out, friends, haven't you any fish?",
+        "He tells them to throw the net on the right side, and they can't haul it in because of the number of fish.",
+        "John says, it is the Lord. And Peter doesn't wait for the boat. He jumps into the water.",
+        "When they land, they see a fire of burning coals there, with fish on it, and some bread.",
+        "The last time Peter stood by a charcoal fire, he denied Jesus three times. Now Jesus has built another one.",
+        "Jesus doesn't start with a lecture. He starts with breakfast. Come and eat.",
+        "Then three times, Jesus asks him, Simon son of John, do you love me? Three questions for three denials.",
+        "And each time, Jesus gives him a job. Feed my lambs. Take care of my sheep. Feed my sheep.",
+        "Restoration in this story isn't just forgiveness. It's being trusted again.",
+        "Here's the big idea. Jesus restores us at the place of our failure, and then he hands us something to carry.",
+        "Where might he be building a fire for you, right where things went wrong?"
+      ],
+      "lowConfidenceSegments": [3],
+      "outline": [
+        { "title": "I’m going fishing", "segment": 1 },
+        { "title": "It is the Lord", "segment": 5 },
+        { "title": "Another charcoal fire", "segment": 7 },
+        { "title": "Trusted again", "segment": 10 }
+      ],
+      "takeaways": [
+        { "text": "The charcoal fire echoes the scene of Peter’s denial; Jesus restores him at the place of failure.", "segments": [7] },
+        { "text": "Jesus begins with breakfast, not a lecture.", "segments": [8] },
+        { "text": "Restoration includes being trusted again: each question comes with a charge to care for others.", "segments": [10, 11] }
+      ],
+      "scriptureReferences": ["John 21:1–19"],
+      "sampleMoments": [
+        { "segment": 7, "note": "Another charcoal fire. Wow." },
+        { "segment": 11, "note": null }
+      ],
+      "sampleNotes": ["Call Marcus. It’s been too long."]
+    }
+  ]
+}
