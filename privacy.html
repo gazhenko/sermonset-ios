@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy · SOWER</title>
+<meta name="description" content="What SOWER keeps on your iPhone, what it sends only when you choose to share, and how to delete it.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#4A1FF2">
+<link rel="icon" href="assets/icon.png">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="masthead wrap">
+  <nav class="nav" aria-label="Main">
+    <a href="index.html#app">The app</a>
+    <a href="index.html#churches">Churches</a>
+    <a class="stamp" href="index.html" aria-label="SOWER home">
+      <svg viewBox="0 0 46 52" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <rect x="3" y="8" width="27" height="39" rx="3" transform="rotate(-9 16.5 27.5)"/>
+        <rect x="14.5" y="4.5" width="27" height="39" rx="3" class="stamp-front"/>
+        <text x="28" y="35.5" text-anchor="middle" font-family="Big Shoulders Display, sans-serif" font-weight="300" font-size="30" fill="currentColor" stroke="none">S</text>
+      </svg>
+    </a>
+    <a href="privacy.html" aria-current="page">Privacy</a>
+    <a href="https://github.com/gazhenko/sermonset-ios">GitHub</a>
+  </nav>
+  <div class="subbar">
+    <span class="subbar-mark">SOWER</span>
+    <span class="subbar-text">Privacy policy · Updated 5 October 2026</span>
+    <div class="toggle" role="group" aria-label="Theme">
+      <span class="label">Theme</span>
+      <button type="button" data-theme-choice="light" aria-pressed="false" aria-label="Light theme">☼</button>
+      <button type="button" data-theme-choice="dark" aria-pressed="false" aria-label="Dark theme">☾</button>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <article class="doc">
+    <p class="label">Privacy policy</p>
+    <h1 class="word">Privacy</h1>
+    <p class="lede" style="margin-top:18px">SOWER is built so the private part of listening stays private. Recording, notes, transcripts, and takeaways all happen on your iPhone. The community features are optional, and they only ever see what you choose to send.</p>
+
+    <h2>On your iPhone only</h2>
+    <p>These never leave your iPhone unless you put them in a backup you save yourself:</p>
+    <ul>
+      <li>Your recordings and imported audio, and the Voice Focus copies you make.</li>
+      <li>Transcripts, your corrections to them, and the takeaways and outlines drafted from them.</li>
+      <li>Notes, marked moments, and your listening position.</li>
+      <li>Your community signing key. It’s stored in the iPhone’s Keychain and protected by the Secure Enclave where available.</li>
+    </ul>
+    <p>Transcription uses Apple’s on-device speech recognition. Takeaways are drafted with Apple’s on-device language model. Neither sends your audio or text to us.</p>
+
+    <h2>Location</h2>
+    <p>When you tap “Suggest the church I’m at,” SOWER reads your location once and asks Apple Maps for churches nearby. Apple handles that search under its own privacy policy. SOWER doesn’t save your coordinates. A sermon keeps only the church or city you choose, or nothing if you choose “Private, no pin.”</p>
+
+    <h2>The community account</h2>
+    <p>You don’t need an account to record, listen, or collect. If you create one, our server stores:</p>
+    <ul>
+      <li>An account ID and the public half of your signing key. There’s no email address or password.</li>
+      <li>The name and avatar style you choose, both optional.</li>
+      <li>Community sermons you’ve kept, the cards you own, your offers, inbox notices, and the accounts you’ve blocked.</li>
+      <li>If you turn on card journeys, the city you enter. Journeys show only cities and weeks, only when everyone a card passed between agreed, and only in cities at least three cards have traveled through.</li>
+      <li>Short-lived security records: one-time request numbers and browser sign-in codes, which are stored as hashes and expire.</li>
+    </ul>
+    <p>Our server doesn’t store IP addresses or device identifiers, and it doesn’t use cookies except the sign-in cookie for the church portal and moderation console.</p>
+
+    <h2 id="sharing">When you share a sermon</h2>
+    <p>Sharing is something you do one sermon at a time, after reviewing it. You choose what goes:</p>
+    <ul>
+      <li><strong>The card’s details:</strong> title, preacher, church, service, date, passage, kind, themes, and city.</li>
+      <li><strong>Your big idea and reflection question,</strong> if you include them.</li>
+      <li><strong>Audio,</strong> if you include it: only the trimmed Voice Focus copy, never the original, and only with the church’s permission through a service QR code or its review. Audio stays private on the server until it’s approved.</li>
+    </ul>
+    <p>Your answers to the sharing checklist and the permission you used are stored with the share so the church and moderators can check it. Your transcript, notes, and moments are never part of a share.</p>
+    <p>Share links publish a picture of the card and its public details. Card offers carry a signed code that identifies the offer and the card. The person you offer a card to sees your chosen name, unless one of you has blocked the other.</p>
+
+    <h2>Churches and moderation</h2>
+    <p>Church staff and moderators sign in to the web consoles by linking a browser from the app. Moderators see reports, which include the reason and any details you type, and the shares waiting for review. Every moderation action is recorded in an audit log.</p>
+
+    <h2>Backups</h2>
+    <p>Back up to Files saves your library as one file wherever you choose: iCloud Drive, Google Drive, Dropbox, or a drive. That service then holds the file under its own terms. Add a passphrase to encrypt the backup. We can’t recover a forgotten passphrase.</p>
+
+    <h2>Deleting things</h2>
+    <ul>
+      <li>Remove a sermon from your library to delete its audio, notes, and moments from your iPhone.</li>
+      <li>Settings › Erase all data deletes everything SOWER keeps on your iPhone.</li>
+      <li>Settings › Community account › Delete removes your account, cards, offers, inbox, and blocks from the server. Sermons you shared stay published without your name, and the church can still remove them. To take one down first, report it from the app.</li>
+    </ul>
+
+    <h2>What we don’t do</h2>
+    <p>No analytics, advertising, tracking, or selling data, in the app or on this site. Every feature is free. This site is hosted by GitHub Pages and the community server runs on Cloudflare. Both process network requests to deliver pages under their own privacy policies. This site keeps only your theme choice, in your own browser.</p>
+
+    <h2>Children</h2>
+    <p>SOWER isn’t directed at children under 13, and the community features shouldn’t be used by them without a parent.</p>
+
+    <h2>Questions</h2>
+    <p>Open an issue on <a href="https://github.com/gazhenko/sermonset-ios/issues">GitHub</a>. If this policy changes, the date at the top will change with it.</p>
+  </article>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div><p class="label">Trade the card. Keep the message.</p></div>
+      <div><p class="label">App</p><ul><li><a href="index.html#app">Features</a></li><li><a href="index.html#looks">Looks</a></li></ul></div>
+      <div><p class="label">Churches</p><ul><li><a href="https://sower.gazhenko.dev/church">Church portal</a></li></ul></div>
+      <div><p class="label">Project</p><ul><li><a href="https://github.com/gazhenko/sermonset-ios">GitHub</a></li><li><a href="https://github.com/gazhenko/sermonset-ios/issues">Issues</a></li></ul></div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
