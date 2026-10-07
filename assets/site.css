@@ -307,7 +307,7 @@ p { margin: 0; }
 }
 
 /* Looks */
-.looks { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(12px, 2vw, 24px); margin-top: clamp(36px, 5vw, 56px); }
+.looks { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(12px, 2vw, 24px); margin-top: clamp(36px, 5vw, 56px); }
 .look { display: grid; gap: 10px; margin: 0; }
 .look img { border-radius: clamp(14px, 2.4vw, 28px); border: 1px solid var(--rule); aspect-ratio: 1206 / 2622; object-fit: cover; width: 100%; }
 .look figcaption { display: grid; gap: 2px; }
@@ -422,6 +422,7 @@ p { margin: 0; }
 .art-millet-sower-full { --src: url("art/millet-sower-full.png"); --ratio: 1000 / 1231; }
 .art-ui-recording { --src: url("art/ui-recording.png"); }
 .art-ui-takeaways { --src: url("art/ui-takeaways.png"); }
+.art-ui-summary { --src: url("art/ui-summary.png"); }
 .art-ui-card { --src: url("art/ui-card.png"); }
 .art-gleaners { --src: url("art/gleaners.png"); --ratio: 1800 / 835; }
 .art-vangogh-sower { --src: url("art/vangogh-sower.png"); --ratio: 1600 / 1240; }
