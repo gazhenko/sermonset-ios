@@ -72,7 +72,7 @@ public enum EvidenceValidator {
     }
     public static func contentHash(_ transcript: Transcript) -> String {
         let payload = transcript.segments.map { "\($0.id)|\($0.start)|\($0.end)|\($0.text)|\($0.confidence)|\($0.isFinal)" }.joined(separator: "\n")
-        return SHA256.hash(data: Data(payload.utf8)).map { String(format: "%02x", $0) }.joined()
+        return SHA256.hash(data: Data(((transcript.localeIdentifier ?? "en_US") + "\n" + payload).utf8)).map { String(format: "%02x", $0) }.joined()
     }
 }
 

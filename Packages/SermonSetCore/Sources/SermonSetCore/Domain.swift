@@ -5,7 +5,7 @@ public enum SermonType: String, Codable, Hashable, Sendable, CaseIterable {
 }
 
 public enum EncounterSource: String, Codable, Hashable, Sendable, CaseIterable {
-    case recorded, imported, sundayPack, trade, shared, sample
+    case recorded, imported, sundayPack, trade, shared, sample, discover
 }
 
 public enum TrustState: String, Codable, Hashable, Sendable, CaseIterable {
@@ -166,13 +166,18 @@ public struct TranscriptSegment: Codable, Hashable, Sendable, Identifiable {
     public var text: String
     public var confidence: Double
     public var isFinal: Bool
-    public init(id: UUID = UUID(), start: TimeInterval, end: TimeInterval, text: String, confidence: Double = 1, isFinal: Bool = true) {
+    public var speaker: String?
+    /// Sum of timed words, excluding silence within the sentence.
+    public var speechDuration: TimeInterval?
+    public init(id: UUID = UUID(), start: TimeInterval, end: TimeInterval, text: String, confidence: Double = 1, isFinal: Bool = true, speaker: String? = nil, speechDuration: TimeInterval? = nil) {
         self.id = id
         self.start = start
         self.end = end
         self.text = text
         self.confidence = confidence
         self.isFinal = isFinal
+        self.speaker = speaker
+        self.speechDuration = speechDuration
     }
 }
 
@@ -183,13 +188,23 @@ public struct Transcript: Codable, Hashable, Sendable, Identifiable {
     public var revision: Int
     public var segments: [TranscriptSegment]
     public var engine: String
+    public var localeIdentifier: String?
     public var createdAt: Date
-    public init(id: UUID = UUID(), sermonID: UUID, audioAssetID: UUID, revision: Int = 1, segments: [TranscriptSegment], engine: String, createdAt: Date = .now) {
+    /// Anonymous speaker with the greatest total speech duration.
+    public var primarySpeaker: String? {
+        var durations: [String: TimeInterval] = [:]
+        for segment in segments {
+            if let speaker = segment.speaker { durations[speaker, default: 0] += max(0, segment.speechDuration ?? (segment.end - segment.start)) }
+        }
+        return durations.keys.sorted().max { durations[$0, default: 0] < durations[$1, default: 0] }
+    }
+    public init(id: UUID = UUID(), sermonID: UUID, audioAssetID: UUID, revision: Int = 1, segments: [TranscriptSegment], engine: String, localeIdentifier: String? = nil, createdAt: Date = .now) {
         self.id = id
         self.sermonID = sermonID
         self.audioAssetID = audioAssetID
         self.revision = revision
         self.segments = segments
+        self.localeIdentifier = localeIdentifier
         self.engine = engine
         self.createdAt = createdAt
     }
@@ -214,13 +229,26 @@ public struct Takeaway: Codable, Hashable, Sendable, Identifiable {
     public var evidence: EvidenceRange?
     public var reviewState: ReviewState
     public var isLowEvidence: Bool
-    public init(id: UUID = UUID(), text: String, evidence: EvidenceRange? = nil, reviewState: ReviewState = .draft, isLowEvidence: Bool = false) {
+    public var isEdited: Bool
+    public init(id: UUID = UUID(), text: String, evidence: EvidenceRange? = nil, reviewState: ReviewState = .draft, isLowEvidence: Bool = false, isEdited: Bool = false) {
         self.id = id
         self.text = text
         self.evidence = evidence
         self.reviewState = reviewState
         self.isLowEvidence = isLowEvidence
+        self.isEdited = isEdited
     }
+    private enum CodingKeys: String, CodingKey { case id, text, evidence, reviewState, isLowEvidence, isEdited }
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        text = try values.decode(String.self, forKey: .text)
+        evidence = try values.decodeIfPresent(EvidenceRange.self, forKey: .evidence)
+        reviewState = try values.decode(ReviewState.self, forKey: .reviewState)
+        isLowEvidence = try values.decode(Bool.self, forKey: .isLowEvidence)
+        isEdited = try values.decodeIfPresent(Bool.self, forKey: .isEdited) ?? false
+    }
+
 }
 
 public struct OutlineItem: Codable, Hashable, Sendable, Identifiable {
@@ -233,6 +261,71 @@ public struct OutlineItem: Codable, Hashable, Sendable, Identifiable {
         self.title = title
         self.start = start
         self.evidence = evidence
+    }
+}
+
+@available(*, deprecated, message: "Use SermonPoint in SermonNotes.")
+public struct SummarySentence: Codable, Hashable, Sendable, Identifiable {
+    public var id: UUID
+    public var text: String
+    public var evidence: EvidenceRange?
+    public var isLowEvidence: Bool
+    public init(id: UUID = UUID(), text: String, evidence: EvidenceRange? = nil, isLowEvidence: Bool = false) {
+        self.id = id; self.text = text; self.evidence = evidence; self.isLowEvidence = isLowEvidence
+    }
+}
+
+@available(*, deprecated, message: "Use SermonNotes.")
+public struct SermonSummary: Codable, Hashable, Sendable {
+    public var bigIdea: String
+    public var sentences: [SummarySentence]
+    public var reflectionQuestion: String?
+    public var reviewState: ReviewState
+    public var isEdited: Bool
+    public init(bigIdea: String, sentences: [SummarySentence], reflectionQuestion: String? = nil, reviewState: ReviewState = .draft, isEdited: Bool = false) {
+        self.bigIdea = bigIdea; self.sentences = sentences; self.reflectionQuestion = reflectionQuestion
+        self.reviewState = reviewState; self.isEdited = isEdited
+    }
+}
+
+public struct KeyPhrase: Codable, Hashable, Sendable {
+    public var text: String
+    public var start: TimeInterval
+    public var evidence: EvidenceRange
+    public init(text: String, start: TimeInterval, evidence: EvidenceRange) {
+        self.text = text; self.start = start; self.evidence = evidence
+    }
+}
+
+public struct SermonPoint: Codable, Hashable, Sendable, Identifiable {
+    public var id: UUID
+    public var heading: String
+    public var summary: String
+    public var scripture: [String]
+    public var keyPhrase: KeyPhrase?
+    public var start: TimeInterval
+    public var evidence: EvidenceRange?
+    public init(id: UUID = UUID(), heading: String, summary: String, scripture: [String] = [], keyPhrase: KeyPhrase? = nil, start: TimeInterval, evidence: EvidenceRange? = nil) {
+        self.id = id; self.heading = heading; self.summary = summary; self.scripture = scripture
+        self.keyPhrase = keyPhrase; self.start = start; self.evidence = evidence
+    }
+}
+
+public struct SermonNotes: Codable, Hashable, Sendable {
+    public var title: String?
+    public var bigIdea: String
+    public var mainPassage: String?
+    public var pointsAnnounced: Bool
+    public var points: [SermonPoint]
+    public var thisWeek: [String]
+    public var questions: [String]
+    public var reviewState: ReviewState
+    public var isEdited: Bool
+    public var engine: String
+    public init(title: String? = nil, bigIdea: String, mainPassage: String? = nil, pointsAnnounced: Bool = false, points: [SermonPoint], thisWeek: [String] = [], questions: [String] = [], reviewState: ReviewState = .draft, isEdited: Bool = false, engine: String = "Apple Intelligence (on-device)") {
+        self.title = title; self.bigIdea = bigIdea; self.mainPassage = mainPassage; self.pointsAnnounced = pointsAnnounced
+        self.points = points; self.thisWeek = thisWeek; self.questions = questions
+        self.reviewState = reviewState; self.isEdited = isEdited; self.engine = engine
     }
 }
 
@@ -250,7 +343,11 @@ public struct SermonInsights: Codable, Hashable, Sendable, Identifiable {
     public var scriptureReferences: [String]
     public var transcriptChecksumSHA256: String?
     public var generatorRuntime: String?
-    public init(id: UUID = UUID(), sermonID: UUID, transcriptID: UUID, transcriptRevision: Int, generator: String, promptVersion: String? = nil, createdAt: Date = .now, suggestedTitle: String? = nil, outline: [OutlineItem] = [], takeaways: [Takeaway] = [], scriptureReferences: [String] = [], transcriptChecksumSHA256: String? = nil, generatorRuntime: String? = nil) {
+    @available(*, deprecated, message: "Use notes.") public var summary: SermonSummary?
+    @available(*, deprecated, message: "Use notesUnavailableReason.") public var summaryUnavailableReason: String?
+    public var notes: SermonNotes?
+    public var notesUnavailableReason: String?
+    public init(id: UUID = UUID(), sermonID: UUID, transcriptID: UUID, transcriptRevision: Int, generator: String, promptVersion: String? = nil, createdAt: Date = .now, suggestedTitle: String? = nil, outline: [OutlineItem] = [], takeaways: [Takeaway] = [], scriptureReferences: [String] = [], transcriptChecksumSHA256: String? = nil, generatorRuntime: String? = nil, summary: SermonSummary? = nil, summaryUnavailableReason: String? = nil, notes: SermonNotes? = nil, notesUnavailableReason: String? = nil) {
         self.id = id
         self.sermonID = sermonID
         self.transcriptID = transcriptID
@@ -264,6 +361,8 @@ public struct SermonInsights: Codable, Hashable, Sendable, Identifiable {
         self.scriptureReferences = scriptureReferences
         self.transcriptChecksumSHA256 = transcriptChecksumSHA256
         self.generatorRuntime = generatorRuntime
+        self.summary = summary; self.summaryUnavailableReason = summaryUnavailableReason
+        self.notes = notes; self.notesUnavailableReason = notesUnavailableReason
     }
 }
 
@@ -361,9 +460,17 @@ public struct CapabilityReport: Codable, Hashable, Sendable {
 public struct ProcessingJobs: Codable, Hashable, Sendable {
     public var transcription: JobState
     public var insights: JobState
-    public init(transcription: JobState = .idle, insights: JobState = .idle) {
+    public var summary: JobState
+    public init(transcription: JobState = .idle, insights: JobState = .idle, summary: JobState = .idle) {
         self.transcription = transcription
-        self.insights = insights
+        self.insights = insights; self.summary = summary
+    }
+    private enum CodingKeys: String, CodingKey { case transcription, insights, summary }
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        transcription = try values.decode(JobState.self, forKey: .transcription)
+        insights = try values.decode(JobState.self, forKey: .insights)
+        summary = try values.decodeIfPresent(JobState.self, forKey: .summary) ?? .idle
     }
 }
 
@@ -387,7 +494,9 @@ public struct CaptureDraft: Codable, Hashable, Sendable {
     public var preacher: String?
     public var churchName: String?
     public var city: String?
-    public init(title: String? = nil, preacher: String? = nil, churchName: String? = nil, city: String? = nil) {
+    public var serviceToken: String?
+    public init(title: String? = nil, preacher: String? = nil, churchName: String? = nil, city: String? = nil, serviceToken: String? = nil) {
+        self.serviceToken = serviceToken
         self.title = title
         self.preacher = preacher
         self.churchName = churchName

@@ -1,0 +1,36 @@
+name = "sower"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+workers_dev = false
+routes = [{ pattern = "sower.gazhenko.dev", custom_domain = true }]
+
+[vars]
+BRAND_NAME = "SOWER"
+BRAND_SCHEME = "sower"
+PUBLIC_BASE_URL = "https://sower.gazhenko.dev"
+TOKEN_KEY_ID = "community-p256-v1"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sower-db"
+database_id = "3355dc00-6e83-4f15-a809-3f8b46727246"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "AUDIO"
+bucket_name = "sower-audio"
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "sower-images"
+
+[assets]
+directory = "../web"
+binding = "ASSETS"
+run_worker_first = true
+
+[triggers]
+crons = ["0 0 * * SUN", "0 * * * *"]
+
+[observability]
+enabled = false

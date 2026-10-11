@@ -1,26 +1,131 @@
 {
   "source": "build/trailer/cfr.mp4",
   "fps": 30,
-  "xfade": 0.4,
-  "phone": { "x": 1300, "y": 40, "width": 460, "height": 1000 },
+  "xfade": 0.5,
+  "ink": "#4A1FF2",
+  "paper": "#F4F4F1",
+  "phone": {
+    "x": 1300,
+    "y": 40,
+    "width": 460,
+    "height": 1000
+  },
   "scenes": [
-    { "name": "title", "card": "title.png", "duration": 3.2 },
-    { "name": "library", "in": 11.0, "out": 19.8, "speed": 1.6 },
-    { "name": "play", "in": 21.0, "out": 27.5, "speed": 1.0 },
-    { "name": "record", "in": 32.0, "out": 42.5, "speed": 1.5 },
-    { "name": "takeaways", "in": 49.3, "out": 56.5, "speed": 1.0 },
-    { "name": "card", "in": 60.0, "out": 74.0, "speed": 1.8 },
-    { "name": "pack", "in": 77.5, "out": 93.5, "speed": 2.0 },
-    { "name": "atlas", "in": 97.0, "out": 106.5, "speed": 1.6 },
-    { "name": "looks", "in": 112.0, "out": 129.9, "speed": 2.3 },
-    { "name": "end", "card": "end.png", "duration": 4.5 }
-  ],
-  "narration": [
-    { "file": "peace-in-the-storm.m4a", "in": 75.54, "out": 83.07, "scene": "title", "offset": 0.6 },
-    { "file": "breakfast-on-the-shore.m4a", "in": 0.0, "out": 6.46, "scene": "play", "offset": 1.7 },
-    { "file": "open-hands.m4a", "in": 49.05, "out": 54.19, "scene": "record", "offset": 2.2 },
-    { "file": "breakfast-on-the-shore.m4a", "in": 48.09, "out": 56.22, "scene": "takeaways", "offset": 2.5 },
-    { "file": "the-table-gets-wider.m4a", "in": 55.14, "out": 59.8, "scene": "pack", "offset": 1.2 },
-    { "file": "built-in-the-waiting.m4a", "in": 78.49, "out": 83.54, "scene": "looks", "offset": 0.6 }
+    {
+      "name": "blank",
+      "plate": "blank",
+      "duration": 0.8
+    },
+    {
+      "name": "title",
+      "plate": "title",
+      "duration": 3.0,
+      "transition": "wipeup"
+    },
+    {
+      "name": "panel-hear",
+      "plate": "panel-hear",
+      "duration": 3.2,
+      "zoom": true,
+      "transition": "wipeup"
+    },
+    {
+      "name": "record",
+      "plate": "record",
+      "in": 34.5,
+      "out": 45.5,
+      "speed": 2.0,
+      "color": true
+    },
+    {
+      "name": "play",
+      "plate": "play",
+      "in": 21.0,
+      "out": 29.5,
+      "speed": 1.3,
+      "color": true
+    },
+    {
+      "name": "takeaways",
+      "plate": "takeaways",
+      "in": 49.5,
+      "out": 60.0,
+      "speed": 1.4
+    },
+    {
+      "name": "panel-pass",
+      "plate": "panel-pass",
+      "duration": 2.6,
+      "zoom": true,
+      "transition": "wipeup"
+    },
+    {
+      "name": "card",
+      "plate": "card",
+      "in": 64.5,
+      "out": 76.5,
+      "speed": 1.8,
+      "color": true
+    },
+    {
+      "name": "discover",
+      "plate": "discover",
+      "in": 80.5,
+      "out": 96.5,
+      "speed": 2.2,
+      "color": true
+    },
+    {
+      "name": "trade-word",
+      "plate": "trade-word",
+      "duration": 2.0,
+      "transition": "wipeup"
+    },
+    {
+      "name": "trade",
+      "plate": "trade",
+      "segments": [
+        [
+          100.5,
+          113.5
+        ],
+        [
+          114.2,
+          114.4
+        ]
+      ],
+      "speed": 2.2,
+      "hold": 2.6,
+      "color": true
+    },
+    {
+      "name": "pack",
+      "plate": "pack",
+      "in": 123.0,
+      "out": 138.5,
+      "speed": 2.4,
+      "color": true
+    },
+    {
+      "name": "atlas",
+      "plate": "atlas",
+      "in": 143.0,
+      "out": 151.5,
+      "speed": 1.8
+    },
+    {
+      "name": "looks",
+      "plate": "looks",
+      "in": 160.0,
+      "out": 179.0,
+      "speed": 2.6,
+      "color": true
+    },
+    {
+      "name": "end",
+      "plate": "end",
+      "duration": 5.0,
+      "transition": "wipeup"
+    }
   ]
 }

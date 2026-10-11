@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>CFBundleDevelopmentRegion</key><string>en</string>
-<key>CFBundleDisplayName</key><string>SermonSet</string>
+<key>CFBundleDisplayName</key><string>$(APP_BRAND)</string>
 <key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
 <key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
@@ -14,7 +14,15 @@
 <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array>
 <key>UIApplicationSceneManifest</key><dict><key>UIApplicationSupportsMultipleScenes</key><false/></dict>
 <key>UILaunchScreen</key><dict><key>UIColorName</key><string>LaunchBackground</string></dict>
-<key>UIBackgroundModes</key><array><string>audio</string></array>
-<key>NSMicrophoneUsageDescription</key><string>SermonSet records the sermons you choose to capture. Recordings stay private on this iPhone unless you decide otherwise.</string>
-<key>NSSpeechRecognitionUsageDescription</key><string>SermonSet transcribes your recordings on this iPhone so you can search and revisit what was preached.</string>
+<key>UIBackgroundModes</key><array><string>audio</string><string>processing</string></array>
+<key>BGTaskSchedulerPermittedIdentifiers</key><array><string>com.gazhenko.sower.process.*</string></array>
+<key>NSMicrophoneUsageDescription</key><string>$(APP_BRAND) records the sermons you choose to capture. Recordings stay private on this iPhone unless you decide otherwise.</string>
+<key>NSSpeechRecognitionUsageDescription</key><string>$(APP_BRAND) transcribes your recordings on this iPhone so you can search and revisit what was preached.</string>
+<key>NSLocationWhenInUseUsageDescription</key><string>$(APP_BRAND) suggests the church you’re at. Your location is only used for this suggestion and is never saved or shared.</string>
+<key>NSCameraUsageDescription</key><string>$(APP_BRAND) uses the camera only to scan QR codes, like a church’s service code or a card someone is giving you. Nothing is recorded or saved.</string>
+<key>AppURLScheme</key><string>$(APP_BRAND:lower)</string>
+<key>CFBundleURLTypes</key><array><dict><key>CFBundleURLName</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string><key>CFBundleURLSchemes</key><array><string>$(APP_BRAND:lower)</string></array></dict></array>
+<key>NSLocalNetworkUsageDescription</key><string>$(APP_BRAND) looks for people nearby only while you’re giving or receiving a card, so the card can pass between your phones.</string>
+<key>NSBonjourServices</key><array><string>_sermon-card._tcp</string><string>_sower-card._tcp</string></array>
+<key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>
 </dict></plist>

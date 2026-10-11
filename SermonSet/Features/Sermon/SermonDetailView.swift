@@ -19,15 +19,26 @@ struct SermonDetailView: View {
                     if !store.isInLibrary(sermon.id) {
                         KeepSampleBanner(sermon: sermon)
                     }
-                    PlayerPanel(sermon: sermon)
+                    if let remoteID = store.communitySermonID(for: sermon.id) {
+                        CommunityPlayerPanel(sermonID: remoteID, localID: store.isInLibrary(sermon.id) ? sermon.id : nil)
+                    } else {
+                        PlayerPanel(sermon: sermon)
+                    }
+                    SermonNotesSection(sermon: sermon).id("summary")
                     if store.isInLibrary(sermon.id) {
                         MomentsSection(sermon: sermon)
                     }
-                    InsightsSection(sermon: sermon).id("takeaways")
+                    if store.insights(for: sermon.id)?.notes == nil {
+                        // Older sermons keep their takeaways until they get sermon notes.
+                        InsightsSection(sermon: sermon).id("takeaways")
+                    }
                     TranscriptPreview(sermon: sermon).id("transcript")
                     if store.isInLibrary(sermon.id) {
                         NotesSection(sermon: sermon).id("notes")
                         CardSection(sermon: sermon).id("card")
+                        if isOwnRecording(sermon) {
+                            ShareWithCommunitySection(sermon: sermon).id("share")
+                        }
                     }
                     DetailsSection(sermon: sermon, onEdit: { isEditing = true }).id("details")
                     if store.isInLibrary(sermon.id) {
@@ -77,6 +88,15 @@ struct SermonDetailView: View {
     }
 }
 
+extension SermonDetailView {
+    /// Only sermons the listener recorded or imported can be shared; kept community sermons already are.
+    func isOwnRecording(_ sermon: Sermon) -> Bool {
+        guard !sermon.isSample, store.communitySermonID(for: sermon.id) == nil else { return false }
+        let source = store.libraryEntries.first { $0.id == sermon.id }?.history.source
+        return source == .recorded || source == .imported
+    }
+}
+
 // MARK: - Header
 
 struct SermonHeader: View {
@@ -93,14 +113,47 @@ struct SermonHeader: View {
     var body: some View {
         Group {
             switch look.id {
+            case .sower: sower
             case .riso: riso
             case .rubric: rubric
             case .vespers: vespers
             case .lumen: lumen
+            case .midnight: midnight
             }
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
+    }
+
+    /// The website's panel: one violet plate, a field printed in paper ink, the title tall and thin.
+    private var sower: some View {
+        let seed = CardFaceModel.stableSeed(sermon.id)
+        let paper = look.palette.onAccent
+        return VStack(alignment: .leading, spacing: 10) {
+            DitherField(seed: seed, composition: .init(typeKey: sermon.sermonType?.rawValue), cell: 3, color: paper)
+                .frame(height: 150)
+            HStack(spacing: 10) {
+                Text(verbatim: (sermon.sermonType?.displayName ?? "Sermon").uppercased())
+                if sermon.isSample { Text(verbatim: "· SAMPLE") }
+            }
+            .font(SowerType.text(11, .caption, weight: .semibold, wide: true))
+            .tracking(1.4)
+            .padding(.top, 6)
+            Text(Format.title(sermon))
+                .font(SowerType.display(60, .largeTitle))
+                .textCase(.uppercase)
+                .lineLimit(4)
+                .minimumScaleFactor(0.5)
+            if let passage = sermon.primaryPassage {
+                Text(passage).font(SowerType.display(26, .title2, weight: .light))
+            }
+            Text(byline).font(look.type.headline)
+            Text(dateLine).font(look.type.caption).opacity(0.9)
+        }
+        .foregroundStyle(paper)
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(look.palette.accent, in: Rectangle())
     }
 
     private var riso: some View {
@@ -237,6 +290,67 @@ struct SermonHeader: View {
     }
 }
 
+extension SermonHeader {
+    /// The sermon as a file open in a terminal window: a title bar, its ASCII landscape, a Markdown
+    /// heading, and the particulars as front matter, keys in keyword color.
+    var midnight: some View {
+        let seed = CardFaceModel.stableSeed(sermon.id)
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 6) {
+                Text(verbatim: Self.fileName(for: sermon)).lineLimit(1)
+                Spacer(minLength: 8)
+                ForEach(0..<3, id: \.self) { _ in Circle().fill(look.palette.rule).frame(width: 8, height: 8) }
+            }
+            .font(look.type.caption)
+            .foregroundStyle(look.palette.inkTertiary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .overlay(alignment: .bottom) { Rectangle().fill(look.palette.rule).frame(height: 1) }
+
+            VStack(alignment: .leading, spacing: 8) {
+                ASCIIField(seed: seed, composition: .init(typeKey: sermon.sermonType?.rawValue), columns: 56, color: typeColor)
+                    .frame(height: 118)
+                (Text(verbatim: "# ").foregroundStyle(look.palette.inkTertiary) + Text(Format.title(sermon)).foregroundStyle(look.palette.ink))
+                    .font(MidnightType.mono(26, .title, weight: .bold))
+                    .lineLimit(4)
+                    .minimumScaleFactor(0.6)
+                    .padding(.top, 4)
+                if let passage = sermon.primaryPassage {
+                    (Text(verbatim: "> ").foregroundStyle(look.palette.inkTertiary) + Text(passage).foregroundStyle(MidnightInk.string))
+                        .font(look.type.headline)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    if let preacher = sermon.preacher { field("preacher", preacher) }
+                    if let church = Format.church(sermon.venue) { field("church", church) }
+                    field("date", dateLine)
+                    if let type = sermon.sermonType { field("type", type.displayName.lowercased(), color: typeColor) }
+                    if sermon.isSample { field("sample", "true", color: look.palette.moment) }
+                }
+                .font(look.type.caption)
+                .padding(.top, 4)
+            }
+            .padding(14)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(look.palette.surface, in: RoundedRectangle(cornerRadius: 3))
+        .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(look.palette.rule, lineWidth: 1))
+    }
+
+    private func field(_ key: String, _ value: String, color: Color? = nil) -> some View {
+        (Text(verbatim: key.padding(toLength: 10, withPad: " ", startingAt: 0)).foregroundStyle(MidnightInk.keyword)
+            + Text(verbatim: value).foregroundStyle(color ?? look.palette.ink))
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    static func fileName(for sermon: Sermon) -> String {
+        let slug = Format.title(sermon).lowercased()
+            .map { $0.isLetter || $0.isNumber ? $0 : "-" }
+            .reduce(into: "") { out, ch in if !(ch == "-" && out.last == "-") { out.append(ch) } }
+            .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+        return String(slug.prefix(32)) + ".md"
+    }
+}
+
 // MARK: - Keep sample
 
 struct KeepSampleBanner: View {
@@ -249,7 +363,7 @@ struct KeepSampleBanner: View {
             Text("This sermon isn’t in your library yet")
                 .font(look.type.headline)
                 .foregroundStyle(look.palette.ink)
-            Text("Keep it to add moments and notes and to get its card. It’s a fictional sample for this prototype.")
+            Text("Keep it to add moments and notes and to get its card. It’s a fictional sample, here so you can try everything.")
                 .font(look.type.callout)
                 .foregroundStyle(look.palette.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -352,7 +466,7 @@ struct MomentRow: View {
         .padding(.horizontal, look.id == .riso || look.id == .lumen ? 12 : 0)
         .background(rowBackground)
         .overlay(alignment: .bottom) {
-            if look.id == .rubric || look.id == .vespers {
+            if look.id == .rubric || look.id == .vespers || look.id == .sower || look.id == .midnight {
                 Rectangle().fill(look.palette.rule).frame(height: 1)
             }
         }
@@ -363,6 +477,11 @@ struct MomentRow: View {
     @ViewBuilder
     private var stamp: some View {
         switch look.id {
+        case .sower:
+            Text(Format.clock(time))
+                .font(SowerType.display(26, .headline, weight: .light).monospacedDigit())
+                .foregroundStyle(look.palette.accent)
+                .frame(width: 58, alignment: .leading)
         case .riso:
             Text(Format.clock(time))
                 .font(.custom("Futura-CondensedExtraBold", 18, .headline))
@@ -385,6 +504,11 @@ struct MomentRow: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
                 .background(look.palette.accent, in: Capsule())
+        case .midnight:
+            Text(verbatim: "[\(Format.clock(time))]")
+                .font(look.type.stamp)
+                .foregroundStyle(look.palette.moment)
+                .frame(width: 70, alignment: .leading)
         }
     }
 
@@ -395,6 +519,8 @@ struct MomentRow: View {
             RoundedRectangle(cornerRadius: 6)
                 .fill(isCurrent ? look.palette.moment.opacity(0.4) : look.palette.surface)
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(look.palette.ink, lineWidth: 1.5))
+        case .sower:
+            Rectangle().fill(isCurrent ? look.palette.highlight : .clear)
         case .rubric:
             Rectangle().fill(isCurrent ? look.palette.highlight : .clear)
         case .vespers:
@@ -402,6 +528,8 @@ struct MomentRow: View {
         case .lumen:
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(isCurrent ? look.palette.highlight : .white.opacity(0.06))
+        case .midnight:
+            Rectangle().fill(isCurrent ? look.palette.highlight : .clear)
         }
     }
 }

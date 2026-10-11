@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// The four visual directions for the prototype. Every screen reads the current look from the
-/// environment; layout-level differences live in the components that switch on `look.id`.
+/// The visual directions for the app: the SOWER house look plus five others. Every screen reads
+/// the current look from the environment; layout-level differences live in the components that
+/// switch on `look.id`.
 enum LookID: String, CaseIterable, Identifiable, Sendable {
-    case riso, rubric, vespers, lumen
+    case sower, riso, rubric, vespers, lumen, midnight
 
     var id: String { rawValue }
 
@@ -22,10 +23,12 @@ struct Look: Sendable {
 
     static func of(_ id: LookID) -> Look {
         switch id {
+        case .sower: .sower
         case .riso: .riso
         case .rubric: .rubric
         case .vespers: .vespers
         case .lumen: .lumen
+        case .midnight: .midnight
         }
     }
 }
@@ -93,7 +96,7 @@ struct LookShape: Sendable {
 }
 
 extension EnvironmentValues {
-    @Entry var look: Look = .riso
+    @Entry var look: Look = .sower
 }
 
 // MARK: - Shared helpers

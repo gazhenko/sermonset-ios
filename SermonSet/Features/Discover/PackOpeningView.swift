@@ -7,6 +7,7 @@ struct PackOpeningView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(SermonStore.self) private var store
+    @Environment(CommunityController.self) private var community
     @Environment(AppRouter.self) private var router
 
     enum Stage { case sealed, revealing, spread, kept }
@@ -48,7 +49,7 @@ struct PackOpeningView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 16)
         }
-        .onAppear { pack = store.currentSundayPack() }
+        .onAppear { pack = community.sundayPack }
         .storeErrorAlert()
         .sensoryFeedback(.impact(weight: .light), trigger: revealedCount)
         .sensoryFeedback(.success, trigger: stage == .kept)
@@ -210,11 +211,13 @@ struct PackOpeningView: View {
                     Text(keepError).font(look.type.caption).foregroundStyle(look.palette.record)
                 }
                 Button(allKept ? "Already in your library" : "Keep all \(pack.sermons.count)") {
-                    do {
-                        try store.keepPack(pack)
-                        withAnimation(.snappy) { stage = .kept }
-                    } catch {
-                        keepError = (error as? SermonSetError)?.message ?? error.localizedDescription
+                    Task {
+                        do {
+                            try await community.openSundayPack()
+                            withAnimation(.snappy) { stage = .kept }
+                        } catch {
+                            keepError = JoinCommunitySheet.message(error)
+                        }
                     }
                 }
                 .buttonStyle(.look(.primary, fullWidth: true))
@@ -262,13 +265,21 @@ struct CardCover: View {
             let s = proxy.size.width / CardMetrics.referenceWidth
             ZStack {
                 switch look.id {
+                case .sower:
+                    look.palette.accent
+                    DitherField(seed: 2026, composition: .furrows, cell: 3 * s, color: look.palette.onAccent)
+                        .frame(height: 190 * s)
+                        .frame(maxHeight: .infinity, alignment: .top)
+                        .padding(14 * s)
+                    Text(verbatim: AppBrand.name.uppercased())
+                        .font(SowerType.display(112 * s))
+                        .foregroundStyle(look.palette.onAccent)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .padding(.bottom, 26 * s)
                 case .riso:
                     look.palette.ink
                     HalftoneDisc(color: look.palette.record, spacing: 7 * s).frame(width: 190 * s, height: 190 * s).offset(x: 50 * s, y: 60 * s)
-                    VStack(spacing: -6 * s) {
-                        Text("SERMON").font(.custom("Futura-CondensedExtraBold", size: 74 * s))
-                        Text("SET").font(.custom("Futura-CondensedExtraBold", size: 74 * s))
-                    }
+                    Text(AppBrand.name.uppercased()).font(.custom("Futura-CondensedExtraBold", size: 96 * s))
                     .foregroundStyle(look.palette.moment)
                     .rotationEffect(.degrees(-8))
                     GrainOverlay(seed: 4, color: .white, density: 0.003, opacity: 0.12)
@@ -278,30 +289,62 @@ struct CardCover: View {
                     Rectangle().strokeBorder(Color(hex: 0xE6C97A, opacity: 0.6), lineWidth: 0.6 * s).padding(19 * s)
                     VStack(spacing: 10 * s) {
                         Fleuron(color: Color(hex: 0xE6C97A)).scaleEffect(2.6 * s)
-                        Text("sermonset").font(.custom("IowanOldStyle-Bold", size: 20 * s).smallCaps()).tracking(3 * s)
+                        Text(AppBrand.name.lowercased()).font(.custom("IowanOldStyle-Bold", size: 22 * s).smallCaps()).tracking(3 * s)
                             .foregroundStyle(Color(hex: 0xF4E6C0))
                             .padding(.top, 16 * s)
                     }
                 case .vespers:
                     LinearGradient(colors: [Color(hex: 0x182141), Color(hex: 0x0B1020)], startPoint: .top, endPoint: .bottom)
                     VespersLineArt(seed: 41).padding(30 * s)
-                    Text("SermonSet").font(.custom("Optima-Regular", size: 18 * s)).tracking(4 * s)
+                    Text(AppBrand.name).font(.custom("Optima-Regular", size: 22 * s)).tracking(4 * s)
                         .foregroundStyle(Color(hex: 0xE9C27A))
                         .frame(maxHeight: .infinity, alignment: .bottom).padding(.bottom, 26 * s)
                 case .lumen:
                     StainedGlass(seed: 77, colors: LumenGlass.jewels, columns: 4, rows: 6, leadWidth: 3 * s)
-                    Text("SermonSet").font(.system(size: 22 * s, weight: .heavy).width(.expanded)).foregroundStyle(.white)
+                    Text(AppBrand.name).font(.system(size: 26 * s, weight: .heavy).width(.expanded)).foregroundStyle(.white)
                         .padding(.horizontal, 16 * s).padding(.vertical, 10 * s)
                         .modifier(LeadedPlate(radius: 16 * s))
+                case .midnight:
+                    // Face down, the card is still bytes: a hex dump with the name framed in phosphor.
+                    look.palette.background
+                    Text(verbatim: MidnightCover.hexDump)
+                        .font(.system(size: 9 * s, design: .monospaced))
+                        .foregroundStyle(look.palette.inkTertiary.opacity(0.55))
+                        .lineSpacing(3 * s)
+                        .padding(12 * s)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    Text(verbatim: AppBrand.name.lowercased())
+                        .font(.system(size: 34 * s, weight: .bold, design: .monospaced))
+                        .foregroundStyle(look.palette.accent)
+                        .padding(.horizontal, 16 * s).padding(.vertical, 10 * s)
+                        .background(look.palette.background)
+                        .overlay(Rectangle().strokeBorder(look.palette.accent, lineWidth: 1.2 * s))
+                    Text(verbatim: "$ flip ▌")
+                        .font(.system(size: 11 * s, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(look.palette.accent)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                        .padding(14 * s)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: (look.id == .rubric ? 6 : 16) * s, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: (look.id == .rubric || look.id == .sower || look.id == .midnight ? 6 : 16) * s, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: (look.id == .rubric ? 6 : 16) * s, style: .continuous)
+                RoundedRectangle(cornerRadius: (look.id == .rubric || look.id == .sower || look.id == .midnight ? 6 : 16) * s, style: .continuous)
                     .strokeBorder(look.id == .riso ? look.palette.ink : Color.black.opacity(0.3), lineWidth: 2 * s)
             )
         }
         .aspectRatio(CardMetrics.aspect, contentMode: .fit)
         .accessibilityHidden(true)
     }
+}
+
+enum MidnightCover {
+    /// A fixed, made-up dump so every face-down card matches.
+    static let hexDump: String = {
+        var rng = SeededRandom(seed: 2026)
+        return (0..<26).map { row in
+            let offset = String(format: "%04x", row * 16)
+            let bytes = (0..<6).map { _ in String(format: "%02x%02x", Int(rng.range(0, 255)), Int(rng.range(0, 255))) }
+            return offset + "  " + bytes.joined(separator: " ")
+        }.joined(separator: "\n")
+    }()
 }

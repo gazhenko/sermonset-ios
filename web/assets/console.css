@@ -1,0 +1,34 @@
+/* Layout pieces shared by the church portal and the moderation console. */
+.console { padding-block: 28px 64px; display: grid; gap: 24px; }
+.console-name { font: 700 1rem/1 var(--body); color: var(--ink-2); margin-right: auto; }
+.account { font-size: .95rem; }
+.account strong { font-weight: 700; }
+
+.page-head { display: grid; gap: 8px; }
+.page-head .display { font-size: clamp(2.4rem, 6vw, 3.6rem); }
+
+.signin { display: grid; gap: 20px; max-width: 560px; }
+.signin ol { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.code-input { font: 400 1.6rem/1 var(--display); letter-spacing: .25em; text-transform: uppercase; max-width: 280px; }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; }
+.toolbar label { min-width: 220px; }
+
+.items { display: grid; gap: 14px; }
+.item { display: grid; gap: 10px; }
+.item-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between; }
+.item-head h3 { font: 700 1.2rem/1.25 var(--body); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--ink-2); font-size: .92rem; }
+.meta span { white-space: nowrap; }
+.item audio { width: 100%; }
+.checklist { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.split { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; }
+@media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+
+.progress { height: 10px; border: 2px solid var(--ink); border-radius: 4px; background: var(--paper); overflow: hidden; }
+.progress > div { height: 100%; width: 0; background: var(--violet); transition: width .2s ease; }
+
+fieldset { border: 2px solid var(--ink); border-radius: 8px; padding: 14px 16px; margin: 0; display: grid; gap: 10px; }
+legend { font-weight: 700; padding-inline: 6px; }
+.form-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }

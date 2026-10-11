@@ -8,6 +8,8 @@ struct LookBackground: View {
     var body: some View {
         ZStack {
             switch look.id {
+            case .sower:
+                look.palette.background
             case .riso:
                 look.palette.background
                 GrainOverlay(seed: 11, color: look.palette.ink, density: 0.0012, opacity: 0.14)
@@ -26,6 +28,8 @@ struct LookBackground: View {
                 )
             case .lumen:
                 LumenWindow()
+            case .midnight:
+                MidnightScreen()
             }
         }
         .ignoresSafeArea()
@@ -70,6 +74,11 @@ struct LookPanel: ViewModifier {
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: look.shape.largeRadius, style: .continuous)
         switch look.id {
+        case .sower:
+            content
+                .padding(padding)
+                .background(fill ?? look.palette.surface, in: shape)
+                .overlay(shape.strokeBorder(look.palette.rule, lineWidth: 1))
         case .riso:
             content
                 .padding(padding)
@@ -90,6 +99,15 @@ struct LookPanel: ViewModifier {
             content
                 .padding(padding)
                 .glassEffect(.regular.tint((fill ?? .clear).opacity(0.35)), in: shape)
+        case .midnight:
+            // A box-drawn pane: hairline frame, square corners, a phosphor tick at the top left.
+            content
+                .padding(padding)
+                .background(fill ?? look.palette.surface, in: shape)
+                .overlay(shape.strokeBorder(look.palette.rule, lineWidth: 1))
+                .overlay(alignment: .topLeading) {
+                    Rectangle().fill(look.palette.accent).frame(width: 10, height: 1)
+                }
         }
     }
 }
@@ -129,10 +147,12 @@ struct LookButtonStyle: ButtonStyle {
             .contentShape(Rectangle())
             .opacity(isEnabled ? 1 : 0.45)
         switch look.id {
+        case .sower: sowerButton(label, pressed: configuration.isPressed)
         case .riso: risoButton(label, pressed: configuration.isPressed)
         case .rubric: rubricButton(label, pressed: configuration.isPressed)
         case .vespers: vespersButton(label, pressed: configuration.isPressed)
         case .lumen: lumenButton(label, pressed: configuration.isPressed)
+        case .midnight: midnightButton(label, pressed: configuration.isPressed)
         }
     }
 
@@ -143,6 +163,28 @@ struct LookButtonStyle: ButtonStyle {
         case .secondary: return (p.surface, p.ink)
         case .quiet: return (.clear, p.ink)
         case .destructive: return (p.record, p.onRecord)
+        }
+    }
+
+    /// The site's buttons: square, a solid ink one and a quiet ghost one, wide labels.
+    @ViewBuilder
+    private func sowerButton(_ label: some View, pressed: Bool) -> some View {
+        let shape = RoundedRectangle(cornerRadius: look.shape.smallRadius)
+        // Wide capitals on the site; here the case stays natural so VoiceOver reads real words.
+        let caps = label.font(SowerType.text(15, .headline, weight: .semibold, wide: true)).tracking(0.4)
+        switch kind {
+        case .primary, .destructive:
+            caps
+                .foregroundStyle(pressed ? look.palette.accent : look.palette.onAccent)
+                .background(shape.fill(pressed ? Color.clear : look.palette.accent))
+                .overlay(shape.strokeBorder(look.palette.accent, lineWidth: 1))
+        case .secondary:
+            caps
+                .foregroundStyle(look.palette.accent)
+                .background(shape.fill(SowerInk.ghost))
+                .overlay(shape.strokeBorder(pressed ? look.palette.accent : .clear, lineWidth: 1))
+        case .quiet:
+            label.foregroundStyle(look.palette.accent).underline(true, color: look.palette.rule).opacity(pressed ? 0.6 : 1)
         }
     }
 
@@ -217,6 +259,31 @@ struct LookButtonStyle: ButtonStyle {
     }
 }
 
+extension LookButtonStyle {
+    /// Terminal buttons: primary is inverted video, secondary sits in brackets, quiet is a link.
+    @ViewBuilder
+    fileprivate func midnightButton(_ label: some View, pressed: Bool) -> some View {
+        let shape = RoundedRectangle(cornerRadius: look.shape.smallRadius)
+        switch kind {
+        case .primary, .destructive:
+            label
+                .foregroundStyle(colors.text)
+                .background(shape.fill(colors.fill.opacity(pressed ? 0.75 : 1)))
+        case .secondary:
+            label
+                .foregroundStyle(look.palette.accent)
+                .background(shape.fill(pressed ? look.palette.highlight : Color.clear))
+                .overlay(alignment: .leading) { Text(verbatim: "[").foregroundStyle(look.palette.inkTertiary).padding(.leading, 4) }
+                .overlay(alignment: .trailing) { Text(verbatim: "]").foregroundStyle(look.palette.inkTertiary).padding(.trailing, 4) }
+        case .quiet:
+            label
+                .foregroundStyle(look.palette.accent)
+                .underline(true, color: look.palette.accent.opacity(0.35))
+                .opacity(pressed ? 0.6 : 1)
+        }
+    }
+}
+
 extension ButtonStyle where Self == LookButtonStyle {
     static func look(_ kind: LookButtonKind = .primary, fullWidth: Bool = false) -> LookButtonStyle {
         LookButtonStyle(kind: kind, fullWidth: fullWidth)
@@ -238,6 +305,12 @@ struct LookIconButtonStyle: ButtonStyle {
             .frame(width: size, height: size)
             .contentShape(Circle())
         switch look.id {
+        case .sower:
+            label
+                .foregroundStyle(prominent ? look.palette.onAccent : look.palette.accent)
+                .background(Circle().fill(prominent ? look.palette.accent : look.palette.background))
+                .overlay(Circle().strokeBorder(look.palette.accent, lineWidth: 1))
+                .opacity(configuration.isPressed ? 0.7 : 1)
         case .riso:
             label
                 .background(Circle().fill(fill))
@@ -258,6 +331,14 @@ struct LookIconButtonStyle: ButtonStyle {
         case .lumen:
             label
                 .glassEffect(prominent ? .regular.tint(look.palette.accent).interactive() : .regular.interactive(), in: Circle())
+        case .midnight:
+            let square = RoundedRectangle(cornerRadius: look.shape.smallRadius)
+            label
+                .foregroundStyle(prominent ? look.palette.onAccent : look.palette.accent)
+                .background(square.fill(prominent ? look.palette.accent : look.palette.surface))
+                .overlay(square.strokeBorder(prominent ? look.palette.accent : look.palette.rule, lineWidth: 1))
+                .contentShape(square)
+                .opacity(configuration.isPressed ? 0.7 : 1)
         }
     }
 }
@@ -300,6 +381,29 @@ struct LookSectionHeader: View {
             }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
+        case .midnight:
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .center, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(verbatim: "❯").foregroundStyle(look.palette.accent)
+                        Text(title)
+                            .textCase(.lowercase)
+                            .foregroundStyle(look.palette.ink)
+                    }
+                    .font(headerFont)
+                    .fixedSize()
+                    Rectangle().fill(look.palette.rule).frame(height: 1)
+                    if let trailing { trailing.fixedSize() }
+                }
+                if let detail {
+                    (Text(verbatim: "// ") + Text(detail))
+                        .font(look.type.caption)
+                        .foregroundStyle(look.palette.inkTertiary)
+                }
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(Text(title))
+            .accessibilityAddTraits(.isHeader)
         default:
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -321,10 +425,12 @@ struct LookSectionHeader: View {
 
     private var headerFont: Font {
         switch look.id {
+        case .sower: SowerType.display(34, .title2, weight: .light)
         case .riso: .custom("Futura-CondensedExtraBold", 26, .title2)
         case .rubric: look.type.headline
         case .vespers: .custom("Optima-Regular", 22, .title2)
         case .lumen: .system(.title3, weight: .bold).width(.expanded)
+        case .midnight: MidnightType.mono(20, .title3, weight: .semibold)
         }
     }
 }
@@ -346,6 +452,12 @@ struct LookTag: View {
         .font(look.type.caption)
         .lineLimit(1)
         switch look.id {
+        case .sower:
+            label
+                .foregroundStyle(look.palette.ink)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .overlay(Rectangle().strokeBorder(look.palette.ink.opacity(0.45), lineWidth: 1))
         case .riso:
             label
                 .foregroundStyle(look.palette.ink)
@@ -369,6 +481,15 @@ struct LookTag: View {
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
                 .glassEffect(.regular.tint((color ?? .clear).opacity(0.55)), in: Capsule())
+        case .midnight:
+            // A highlighted token, the way an editor marks a match.
+            let token = color ?? look.palette.inkSecondary
+            label
+                .foregroundStyle(token)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(token.opacity(0.1), in: RoundedRectangle(cornerRadius: 2))
+                .overlay(RoundedRectangle(cornerRadius: 2).strokeBorder(token.opacity(0.35), lineWidth: 1))
         }
     }
 }

@@ -81,7 +81,7 @@ final class SegmentWriter: @unchecked Sendable {
             output = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity)!
             let feed = ConverterInputFeed(input)
             var conversionError: NSError?
-            let status = converter.convert(to: output, error: &conversionError) { _, status in
+            let status = converter.convert(to: output, error: &conversionError) { @Sendable _, status in
                 feed.next(status: status)
             }
             if let conversionError { throw conversionError }
@@ -157,10 +157,15 @@ private final class AudioBufferBox: @unchecked Sendable {
         let input = audioEngine.inputNode
         let format = input.outputFormat(forBus: 0)
         guard format.channelCount > 0, format.sampleRate > 0, let writer else { throw SermonSetError(title: "Microphone unavailable", message: "A recording input could not be opened.") }
-        input.installTap(onBus: 0, bufferSize: 4096, format: format) { [writer] buffer, _ in writer.append(buffer) }
+        input.installTap(onBus: 0, bufferSize: 4096, format: format, block: Self.makeTap(writer: writer))
         audioEngine.prepare()
         do { try audioEngine.start(); engine = audioEngine }
         catch { input.removeTap(onBus: 0); throw error }
+    }
+    // AVFAudio invokes this block on its realtime queue. Form it outside the
+    // main actor, even though resume() installs it from the main actor.
+    nonisolated static func makeTap(writer: SegmentWriter) -> AVAudioNodeTapBlock {
+        { @Sendable [writer] buffer, _ in writer.append(buffer) }
     }
     func pause() throws {
         if let engine { engine.inputNode.removeTap(onBus: 0); engine.stop() }

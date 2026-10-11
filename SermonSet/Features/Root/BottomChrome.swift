@@ -26,10 +26,12 @@ struct BottomBar: View {
     var body: some View {
         Group {
             switch look.id {
+            case .sower: sower
             case .riso: riso
             case .rubric: rubric
             case .vespers: vespers
             case .lumen: lumen
+            case .midnight: midnight
             }
         }
         // Like the system tab bar: capped type, with the Large Content Viewer for bigger sizes.
@@ -55,6 +57,85 @@ struct BottomBar: View {
     }
 
     private var recordLabel: LocalizedStringKey { capture.isActive ? "Return to recording" : "Record a sermon" }
+
+    // MARK: SOWER — the site's nav: a hairline, wide capitals, an underline, a square ink button.
+
+    private var sower: some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(look.palette.ink).frame(height: 1)
+            HStack(spacing: 0) {
+                ForEach(AppTab.allCases) { tab in
+                    tabButton(tab) { selected in
+                        VStack(spacing: 5) {
+                            Text(verbatim: tab.name.uppercased())
+                                .font(SowerType.text(12, .headline, weight: .semibold, wide: true))
+                                .tracking(1.4)
+                                .accessibilityLabel(Text(verbatim: tab.name))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                                .foregroundStyle(look.palette.ink.opacity(selected ? 1 : 0.62))
+                            Rectangle()
+                                .fill(selected ? look.palette.ink : .clear)
+                                .frame(width: 26, height: 2)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .contentShape(Rectangle())
+                    }
+                }
+                Button { router.isRecorderPresented = true } label: {
+                    Image(systemName: capture.isActive ? "waveform" : "mic.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(look.palette.onAccent)
+                        .frame(width: 50, height: 50)
+                        .background(RoundedRectangle(cornerRadius: 2).fill(look.palette.accent))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
+                .accessibilityLabel(recordLabel)
+            }
+            .padding(.leading, 6)
+        }
+        .background(look.palette.background.ignoresSafeArea(edges: .bottom))
+    }
+
+    // MARK: Midnight — a tmux status line: numbered windows, the current one in inverse video.
+
+    private var midnight: some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(look.palette.rule).frame(height: 1)
+            HStack(spacing: 4) {
+                ForEach(Array(AppTab.allCases.enumerated()), id: \.offset) { index, tab in
+                    tabButton(tab) { selected in
+                        Text(verbatim: "\(index):\(tab.name.lowercased())\(selected ? "*" : "")")
+                            .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                            .accessibilityLabel(Text(verbatim: tab.name))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .foregroundStyle(selected ? look.palette.onAccent : look.palette.inkSecondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(selected ? look.palette.accent : .clear, in: RoundedRectangle(cornerRadius: 2))
+                            .contentShape(Rectangle())
+                    }
+                }
+                Button { router.isRecorderPresented = true } label: {
+                    Text(verbatim: capture.isActive ? "● live" : "● rec")
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundStyle(look.palette.onRecord)
+                        .padding(.horizontal, 12)
+                        .frame(height: 44)
+                        .background(RoundedRectangle(cornerRadius: 2).fill(look.palette.record))
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 6)
+                .accessibilityLabel(recordLabel)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+        }
+        .background(look.palette.surface.ignoresSafeArea(edges: .bottom))
+    }
 
     // MARK: Riso — an ink bar with lime selection blocks and a coral record stamp.
 
@@ -236,7 +317,7 @@ struct RecordingPill: View {
         }
         .buttonStyle(.plain)
         .modifier(ChromeSurface())
-        .padding(.horizontal, look.id == .rubric ? 16 : 0)
+        .padding(.horizontal, look.id == .rubric || look.id == .sower ? 16 : 0)
         .accessibilityLabel(Text("\(statusText), \(Format.spokenClock(capture.elapsed)). Return to recording."))
     }
 
@@ -303,7 +384,7 @@ struct MiniPlayer: View {
                 .padding(.horizontal, look.id == .riso ? 2 : 14)
                 .accessibilityHidden(true)
             }
-            .padding(.horizontal, look.id == .rubric ? 16 : 0)
+            .padding(.horizontal, look.id == .rubric || look.id == .sower ? 16 : 0)
         }
     }
 
@@ -319,6 +400,10 @@ struct ChromeSurface: ViewModifier {
 
     func body(content: Content) -> some View {
         switch look.id {
+        case .sower:
+            content
+                .background(look.palette.surfaceRaised, in: RoundedRectangle(cornerRadius: 2))
+                .overlay(RoundedRectangle(cornerRadius: 2).strokeBorder(look.palette.ink, lineWidth: 1))
         case .riso:
             content
                 .background(look.palette.surface, in: RoundedRectangle(cornerRadius: 8))
@@ -334,6 +419,10 @@ struct ChromeSurface: ViewModifier {
                 .overlay(Capsule().strokeBorder(look.palette.rule, lineWidth: 1))
         case .lumen:
             content.glassEffect(.regular.tint(Color(hex: 0x0D0C14, opacity: 0.5)).interactive(), in: Capsule())
+        case .midnight:
+            content
+                .background(look.palette.surfaceRaised, in: RoundedRectangle(cornerRadius: 3))
+                .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(look.palette.rule, lineWidth: 1))
         }
     }
 }
@@ -349,6 +438,10 @@ struct TypeSwatch: View {
         let seed = CardFaceModel.stableSeed(sermon.id)
         Group {
             switch look.id {
+            case .sower:
+                DitherField(seed: seed, composition: .init(typeKey: sermon.sermonType?.rawValue), cell: max(1.5, size / 22))
+                    .background(look.palette.background)
+                    .overlay(Rectangle().strokeBorder(look.palette.ink, lineWidth: 1))
             case .riso:
                 ZStack {
                     color
@@ -370,6 +463,11 @@ struct TypeSwatch: View {
             case .lumen:
                 StainedGlass(seed: seed, colors: LumenGlass.panes(for: sermon.sermonType?.rawValue, seed: seed), columns: 2, rows: 2, leadWidth: 1.5)
                     .clipShape(RoundedRectangle(cornerRadius: size * 0.28, style: .continuous))
+            case .midnight:
+                ASCIIField(seed: seed, composition: .init(typeKey: sermon.sermonType?.rawValue), columns: max(6, Int(size / 5)), color: color)
+                    .padding(2)
+                    .background(look.palette.surface)
+                    .overlay(Rectangle().strokeBorder(look.palette.rule, lineWidth: 1))
             }
         }
         .frame(width: size, height: size)

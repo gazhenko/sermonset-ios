@@ -9,13 +9,14 @@ struct CardViewer: View {
     @Environment(SermonStore.self) private var store
     @Environment(PlaybackController.self) private var playback
     @Environment(AppRouter.self) private var router
+    @Environment(CommunityController.self) private var community
     let sermonID: UUID
 
     @State private var flips = 0
     @State private var side: CardSide = .front
     @State private var shareImage: Image?
-    @State private var confirmTrade = false
-    @State private var tradeDone = false
+    @State private var trading: CommunityCard?
+    @State private var showingJourney = false
 
     var body: some View {
         ZStack {
@@ -44,13 +45,6 @@ struct CardViewer: View {
                     Text(reduceMotion ? "Tap the card to turn it over" : "Drag to tilt · Tap to turn over")
                         .font(look.type.caption)
                         .foregroundStyle(look.palette.inkTertiary)
-                    if tradeDone {
-                        Text("The card left your binder. “\(model.title)” is still in your library with your notes and moments.")
-                            .font(look.type.callout)
-                            .foregroundStyle(look.palette.ink)
-                            .multilineTextAlignment(.center)
-                            .lookPanel(padding: 14)
-                    }
                     Spacer(minLength: 0)
                     HStack(spacing: 12) {
                         Button { flips += 1 } label: {
@@ -68,30 +62,46 @@ struct CardViewer: View {
                         }
                         .buttonStyle(.look(.primary, fullWidth: true))
                     }
-                    if card != nil {
-                        Button("Practice a trade") { confirmTrade = true }
-                            .buttonStyle(.look(.quiet))
+                    if let remoteID = store.communitySermonID(for: sermonID), community.account != nil {
+                        ShareLinkButton(sermonID: remoteID, model: model)
+                    }
+                    if let card {
+                        tradeRow(card: card, model: model)
                     }
                 }
                 .padding(20)
                 .task(id: look.id) { shareImage = render(model) }
                 .storeErrorAlert()
-                .sheet(isPresented: $confirmTrade) {
-                    TradePreviewSheet(title: model.title) {
-                        guard let card else { return }
-                        do {
-                            try store.previewTrade(cardID: card.id)
-                            confirmTrade = false
-                            withAnimation { tradeDone = true }
-                        } catch {
-                            confirmTrade = false
-                        }
+                .sheet(item: $trading) { card in
+                    OfferComposerSheet(card: card, model: model).lookScoped(look)
+                }
+                .sheet(isPresented: $showingJourney) {
+                    if let card, let remote = community.communityCard(forLocal: card, store: store) {
+                        CardJourneySheet(card: remote, title: model.title).lookScoped(look).presentationDetents([.medium, .large])
                     }
-                    .lookScoped(look)
-                    .storeErrorAlert()
-                    .presentationDetents([.medium, .large])
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func tradeRow(card: CardInstance, model: CardFaceModel) -> some View {
+        if let remote = community.communityCard(forLocal: card, store: store) {
+            HStack(spacing: 12) {
+                if remote.tradeable {
+                    Button { trading = remote } label: { Label("Give or swap", systemImage: "arrow.left.arrow.right") }
+                        .buttonStyle(.look(.quiet))
+                        .accessibilityIdentifier("card.trade")
+                }
+                Button { showingJourney = true } label: { Label("Journey", systemImage: "point.topleft.down.to.point.bottomright.curvepath") }
+                    .buttonStyle(.look(.quiet))
+            }
+        } else if !model.isSample {
+            Text("Personal cards stay with you. Share the sermon with the community to get a card you can trade.")
+                .font(look.type.caption)
+                .foregroundStyle(look.palette.inkTertiary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -104,53 +114,5 @@ struct CardViewer: View {
         renderer.scale = 2
         guard let image = renderer.uiImage else { return nil }
         return Image(uiImage: image)
-    }
-}
-
-struct TradePreviewSheet: View {
-    @Environment(\.look) private var look
-    @Environment(\.dismiss) private var dismiss
-    var title: String
-    var onConfirm: () -> Void
-
-    var body: some View {
-        ZStack {
-            LookBackground()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Practice a trade")
-                        .font(look.type.title)
-                        .lookDisplay(look)
-                        .foregroundStyle(look.palette.ink)
-                    Text("Real trading isn’t built yet. This preview shows what happens when you hand a card to a friend: the card leaves your binder, and nothing else changes.")
-                        .font(look.type.body)
-                        .foregroundStyle(look.palette.inkSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    VStack(alignment: .leading, spacing: 10) {
-                        row("rectangle.stack.badge.minus", "Leaves your binder", "The “\(title)” card")
-                        row("books.vertical", "Stays in your library", "The sermon, its audio, and your listening progress")
-                        row("lock", "Stays private", "Your notes and moments never travel with a card")
-                        row("paperplane", "Sent to no one", "Nothing leaves this iPhone in a preview")
-                    }
-                    .lookPanel(padding: 16)
-                    Button("Remove card from binder", action: onConfirm)
-                        .buttonStyle(.look(.primary, fullWidth: true))
-                    Button("Keep the card") { dismiss() }
-                        .buttonStyle(.look(.secondary, fullWidth: true))
-                }
-                .padding(22)
-            }
-        }
-    }
-
-    private func row(_ icon: String, _ title: String, _ detail: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: icon).frame(width: 24).foregroundStyle(look.palette.accent)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(look.type.headline).foregroundStyle(look.palette.ink)
-                Text(detail).font(look.type.caption).foregroundStyle(look.palette.inkSecondary)
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 }

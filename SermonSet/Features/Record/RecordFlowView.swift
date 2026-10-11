@@ -21,6 +21,7 @@ struct RecordFlowView: View {
     @State private var startError: String?
     @State private var isStarting = false
     @State private var dimmed = false
+    @State private var service: VerifiedService?
 
     var body: some View {
         ZStack {
@@ -33,7 +34,12 @@ struct RecordFlowView: View {
                     dismiss()
                 }
             } else if capture.isActive {
-                LiveRecordingView(dimmed: $dimmed, onSaved: { sermon in withAnimation { saved = sermon } })
+                LiveRecordingView(dimmed: $dimmed, onSaved: { sermon in
+                    withAnimation { saved = sermon }
+                    if store.summarizeAfterRecording {
+                        Task { await store.processRecording(sermonID: sermon.id) }
+                    }
+                })
             } else {
                 setup
             }
@@ -49,7 +55,14 @@ struct RecordFlowView: View {
             }
         }
         .storeErrorAlert()
+        .onChange(of: service) { _, service in
+            guard let grant = service?.grant else { return }
+            consent = grant.recordingAllowed
+            if let name = service?.churchName, church.isEmpty { church = name }
+        }
     }
+
+    private var recordingDeclined: Bool { service?.grant.recordingAllowed == false }
 
     // MARK: Setup
 
@@ -74,10 +87,16 @@ struct RecordFlowView: View {
                     .foregroundStyle(look.palette.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
 
+                ServiceQRCard(verified: $service)
+
                 consentCard
 
                 DisclosureGroup(isExpanded: $showDetails) {
-                    VStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        VenueSuggestions { candidate in
+                            church = candidate.churchName
+                            city = candidate.city ?? city
+                        }
                         LookTextField(placeholder: "Title", text: $title)
                         LookTextField(placeholder: "Preacher", text: $preacher)
                         LookTextField(placeholder: "Church", text: $church)
@@ -96,7 +115,7 @@ struct RecordFlowView: View {
                         Label("Microphone access is off", systemImage: "mic.slash")
                             .font(look.type.headline)
                             .foregroundStyle(look.palette.ink)
-                        Text("Turn on the microphone for SermonSet in Settings to record.")
+                        Text("Turn on the microphone for \(AppBrand.name) in Settings to record.")
                             .font(look.type.callout)
                             .foregroundStyle(look.palette.inkSecondary)
                         Button("Open Settings") {
@@ -115,7 +134,7 @@ struct RecordFlowView: View {
                     RecordButton(isRecording: false, isBusy: isStarting) { Task { await start() } }
                         .disabled(!consent || isStarting)
                         .opacity(consent ? 1 : 0.45)
-                    Text(consent ? "Tap to start recording" : "Confirm recording is welcome to start")
+                    Text(recordingDeclined ? "This church’s service code asks for no recording" : consent ? "Tap to start recording" : "Confirm recording is welcome to start")
                         .font(look.type.callout)
                         .foregroundStyle(look.palette.inkSecondary)
                     if capture.estimatedTimeRemaining > 0 {
@@ -142,7 +161,7 @@ struct RecordFlowView: View {
                     Text("Recording is welcome at this service")
                         .font(look.type.headline)
                         .foregroundStyle(look.palette.ink)
-                    Text("Ask if you’re not sure. Recording for yourself is different from sharing, and SermonSet never shares a recording on its own.")
+                    Text("Ask if you’re not sure. Recording for yourself is different from sharing, and \(AppBrand.name) never shares a recording on its own.")
                         .font(look.type.caption)
                         .foregroundStyle(look.palette.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -152,6 +171,8 @@ struct RecordFlowView: View {
             }
         }
         .buttonStyle(.plain)
+        .disabled(recordingDeclined)
+        .opacity(recordingDeclined ? 0.5 : 1)
         .lookPanel(padding: 14)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Recording is welcome at this service")
@@ -169,13 +190,13 @@ struct RecordFlowView: View {
         }
         if capture.micPermission != .granted {
             guard await capture.requestPermission() else {
-                startError = "Microphone access is off. Turn it on for SermonSet in Settings, then try again."
+                startError = "Microphone access is off. Turn it on for \(AppBrand.name) in Settings, then try again."
                 return
             }
         }
         func clean(_ s: String) -> String? { let t = s.trimmingCharacters(in: .whitespaces); return t.isEmpty ? nil : t }
         do {
-            try await capture.start(CaptureDraft(title: clean(title), preacher: clean(preacher), churchName: clean(church), city: clean(city)))
+            try await capture.start(CaptureDraft(title: clean(title), preacher: clean(preacher), churchName: clean(church), city: clean(city), serviceToken: service?.token))
         } catch {
             startError = (error as? SermonSetError)?.message ?? error.localizedDescription
         }
@@ -336,8 +357,8 @@ struct LiveRecordingView: View {
         } label: {
             VStack(spacing: 4) {
                 Label("Mark this moment", systemImage: "bookmark.fill")
-                    .font(look.id == .riso ? .custom("Futura-CondensedExtraBold", 28, .title2) : look.type.label.weight(.bold))
-                    .textCase(look.id == .riso ? .uppercase : nil)
+                    .font(look.id == .riso ? .custom("Futura-CondensedExtraBold", 28, .title2) : look.id == .sower ? SowerType.display(36, .title2, weight: .light) : look.type.label.weight(.bold))
+                    .textCase(look.id == .riso || look.id == .sower ? .uppercase : nil)
                 Text(markSubtitle).font(look.type.caption).opacity(0.8)
             }
             .foregroundStyle(look.palette.onMoment)
@@ -361,6 +382,8 @@ struct LiveRecordingView: View {
     @ViewBuilder
     private var markBackground: some View {
         switch look.id {
+        case .sower:
+            RoundedRectangle(cornerRadius: 2).fill(look.palette.moment)
         case .riso:
             RoundedRectangle(cornerRadius: 10).fill(look.palette.moment)
                 .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(look.palette.ink, lineWidth: 3))
@@ -374,6 +397,12 @@ struct LiveRecordingView: View {
         case .lumen:
             RoundedRectangle(cornerRadius: 30, style: .continuous).fill(.clear)
                 .glassEffect(.regular.tint(look.palette.moment).interactive(), in: RoundedRectangle(cornerRadius: 30, style: .continuous))
+        case .midnight:
+            RoundedRectangle(cornerRadius: 3).fill(look.palette.moment)
+                .overlay(alignment: .topLeading) {
+                    Text(verbatim: "F1").font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundStyle(look.palette.onMoment.opacity(0.55)).padding(6)
+                }
         }
     }
 
@@ -497,11 +526,19 @@ struct SavedView: View {
     var onOpen: () -> Void
     var onDone: () -> Void
 
+    /// The pipeline ended without a summary (failed, unavailable, or no speech): say so on the sermon page.
+    private var summaryStopped: Bool {
+        let jobs = store.jobs(for: sermon.id)
+        let running = jobs.transcription.isRunning || jobs.insights.isRunning || jobs.summary.isRunning
+        let started = jobs.transcription != .idle || jobs.insights != .idle || jobs.summary != .idle
+        return started && !running
+    }
+
     var body: some View {
         let duration = store.audioAssets(for: sermon.id).first?.duration ?? 0
         let moments = store.moments(for: sermon.id).count
         VStack(alignment: .leading, spacing: 20) {
-            Spacer()
+            Spacer(minLength: 12)
             Image(systemName: "checkmark.circle")
                 .font(.system(size: 44, weight: .light))
                 .foregroundStyle(look.palette.positive)
@@ -516,13 +553,32 @@ struct SavedView: View {
                     .foregroundStyle(look.palette.inkSecondary)
                 PrivateBadge().padding(.top, 4)
             }
-            Text("Listen back whenever you like. Transcribing and making a card are separate steps, and you can do them later.")
-                .font(look.type.body)
-                .foregroundStyle(look.palette.inkSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+            if let notes = store.insights(for: sermon.id)?.notes {
+                VStack(alignment: .leading, spacing: 14) {
+                    BigIdea(text: notes.bigIdea)
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(Array(notes.points.enumerated()), id: \.element.id) { index, point in
+                            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                PointMarker(index: index + 1).scaleEffect(0.7, anchor: .leading).frame(width: 30, alignment: .leading)
+                                Text(point.heading).font(look.type.headline).foregroundStyle(look.palette.ink)
+                            }
+                        }
+                    }
+                }
+                .padding(.top, 4)
+                .transition(.opacity)
+            } else if store.summarizeAfterRecording, !summaryStopped {
+                NotesProgress(sermonID: sermon.id)
+            } else {
+                Text("Listen back whenever you like. You can get sermon notes on the sermon page whenever you’re ready.")
+                    .font(look.type.body)
+                    .foregroundStyle(look.palette.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             Spacer()
             VStack(spacing: 12) {
-                Button("Open sermon", action: onOpen).buttonStyle(.look(.primary, fullWidth: true))
+                Button(store.insights(for: sermon.id)?.notes == nil ? "Open sermon" : "Read the notes", action: onOpen)
+                    .buttonStyle(.look(.primary, fullWidth: true))
                 Button("Done", action: onDone).buttonStyle(.look(.secondary, fullWidth: true))
             }
         }
@@ -543,6 +599,10 @@ struct RecordButton: View {
         Button(action: action) {
             ZStack {
                 switch look.id {
+                case .sower:
+                    Circle().strokeBorder(look.palette.accent, lineWidth: 1)
+                    Circle().fill(look.palette.accent).padding(10)
+                    Text(verbatim: "REC").font(SowerType.display(48, .title)).foregroundStyle(look.palette.onAccent)
                 case .riso:
                     Circle().fill(look.palette.ink).offset(x: 6, y: 6)
                     Circle().fill(look.palette.record)
@@ -562,6 +622,15 @@ struct RecordButton: View {
                     Circle().fill(.clear)
                         .glassEffect(.regular.tint(look.palette.record).interactive(), in: Circle())
                     Image(systemName: "mic.fill").font(.system(size: 38, weight: .semibold)).foregroundStyle(.white)
+                case .midnight:
+                    // A terminal key: a coral cap inside a hairline frame.
+                    RoundedRectangle(cornerRadius: 4).strokeBorder(look.palette.record.opacity(0.6), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 3).fill(look.palette.record).padding(10)
+                    VStack(spacing: 2) {
+                        Text(verbatim: isRecording ? "■" : "●").font(.system(size: 22, weight: .bold, design: .monospaced))
+                        Text(verbatim: isRecording ? "stop" : "rec").font(.system(size: 30, weight: .bold, design: .monospaced))
+                    }
+                    .foregroundStyle(look.palette.onRecord)
                 }
                 if isBusy { ProgressView().tint(look.palette.ink) }
             }
@@ -584,10 +653,12 @@ struct LevelMeter: View {
         GeometryReader { proxy in
             let values = padded(count: barCount(for: proxy.size.width))
             switch look.id {
+            case .sower: sower(values, size: proxy.size)
             case .riso: riso(values, size: proxy.size)
             case .rubric: rubric(values, size: proxy.size)
             case .vespers: vespers(size: proxy.size)
             case .lumen: lumen(values, size: proxy.size)
+            case .midnight: midnight(values, size: proxy.size)
             }
         }
         .accessibilityElement()
@@ -600,6 +671,41 @@ struct LevelMeter: View {
     private func padded(count: Int) -> [CGFloat] {
         let recent = history.suffix(count).map { CGFloat($0) }
         return Array(repeating: 0, count: max(0, count - recent.count)) + recent
+    }
+
+    /// A sparkline in block characters: each column snaps to one of eight heights, ▁ to █.
+    private func midnight(_ values: [CGFloat], size: CGSize) -> some View {
+        Canvas { context, canvasSize in
+            let step = canvasSize.width / CGFloat(values.count)
+            let unit = canvasSize.height * 0.8 / 8
+            let base = canvasSize.height * 0.9
+            context.fill(Path(CGRect(x: 0, y: base, width: canvasSize.width, height: 1)), with: .color(look.palette.rule))
+            for (i, value) in values.enumerated() {
+                let level = max(1, min(8, Int((value * 8).rounded(.up))))
+                let rect = CGRect(x: CGFloat(i) * step + 1, y: base - CGFloat(level) * unit, width: max(1, step - 2), height: CGFloat(level) * unit)
+                let color = i == values.count - 1 ? look.palette.accent : look.palette.accent.opacity(0.5)
+                context.fill(Path(rect), with: .color(color))
+            }
+        }
+    }
+
+    /// Columns of printed squares, like the website's dithered plates.
+    private func sower(_ values: [CGFloat], size: CGSize) -> some View {
+        Canvas { context, canvasSize in
+            let step = canvasSize.width / CGFloat(values.count)
+            let square: CGFloat = 4
+            var path = Path()
+            for (i, value) in values.enumerated() {
+                let rows = Int(max(1, value * 9))
+                let x = CGFloat(i) * step + (step - square) / 2
+                for r in 0..<rows {
+                    let offset = CGFloat(r) * (square + 2)
+                    path.addRect(CGRect(x: x, y: canvasSize.height / 2 - offset - square, width: square, height: square))
+                    path.addRect(CGRect(x: x, y: canvasSize.height / 2 + offset, width: square, height: square))
+                }
+            }
+            context.fill(path, with: .color(look.palette.ink))
+        }
     }
 
     private func riso(_ values: [CGFloat], size: CGSize) -> some View {
@@ -681,10 +787,12 @@ struct LookTextField: View {
             .padding(12)
             .background {
                 switch look.id {
+                case .sower: shape.fill(look.palette.surfaceRaised).overlay(shape.strokeBorder(look.palette.ink.opacity(0.5), lineWidth: 1))
                 case .riso: shape.fill(look.palette.surfaceRaised).overlay(shape.strokeBorder(look.palette.ink, lineWidth: 2))
                 case .rubric: shape.fill(look.palette.surfaceRaised).overlay(shape.strokeBorder(look.palette.rule, lineWidth: 1))
                 case .vespers: shape.fill(look.palette.surface).overlay(shape.strokeBorder(look.palette.rule, lineWidth: 1))
                 case .lumen: shape.fill(.white.opacity(0.08)).overlay(shape.strokeBorder(.white.opacity(0.22), lineWidth: 0.5))
+                case .midnight: shape.fill(look.palette.surface).overlay(shape.strokeBorder(look.palette.rule, lineWidth: 1))
                 }
             }
     }

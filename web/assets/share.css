@@ -1,0 +1,17 @@
+.share-top { padding-block: 20px; }
+.share { display: grid; gap: 40px; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); align-items: start; padding-block: 12px 64px; }
+@media (max-width: 820px) { .share { grid-template-columns: 1fr; } }
+.share-card { margin: 0; }
+.share-card img { width: 100%; height: auto; border-radius: 18px; box-shadow: 8px 8px 0 var(--ink); border: 2px solid var(--ink); background: var(--paper-3); }
+.share-copy { display: grid; gap: 16px; min-width: 0; }
+.share-eyebrow { font-weight: 700; color: var(--ink-2); }
+.share-title { font-size: clamp(2.6rem, 7vw, 4.6rem); }
+.share-by { font-weight: 700; }
+.share-passage { display: inline-block; justify-self: start; background: var(--lime); border: 2px solid var(--ink); padding: 4px 12px; font: 400 1.4rem/1.2 var(--display); text-transform: uppercase; transform: rotate(-2deg); }
+.share-block h2 { font: 400 1.4rem/1 var(--display); text-transform: uppercase; margin-bottom: 6px; }
+.share-fiction:empty { display: none; }
+
+.offer { display: grid; padding-block: 24px 64px; max-width: 46rem; }
+.offer-expiry { font-weight: 700; }
+.offer-problem { color: #B42318; font-weight: 700; }
+.offer-notes { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }

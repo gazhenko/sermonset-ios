@@ -5,15 +5,23 @@ options:
     iOS: "26.0"
 settings:
   base:
+    APP_BRAND: "SOWER"
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     SWIFT_APPROACHABLE_CONCURRENCY: YES
-    MARKETING_VERSION: "0.1.0"
+    MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
 packages:
   SermonSetCore:
     path: Packages/SermonSetCore
+  # Optional open-source notes engine (Qwen 3.5 4B via MLX). The owner approved MLX as the one exception
+  # to "no third-party packages"; SermonSetCore stays dependency-free.
+  SermonSetLocalModel:
+    path: Packages/SermonSetLocalModel
+  # On-device transcription (Parakeet Ultra + speaker labels via FluidAudio, Apache-2.0); see docs/build/ASR-EVALUATION.md.
+  SermonSetSpeech:
+    path: Packages/SermonSetSpeech
 targets:
   SermonSet:
     type: application
@@ -28,16 +36,21 @@ targets:
         optional: true
     dependencies:
       - package: SermonSetCore
+      - package: SermonSetLocalModel
+        product: SermonSetLocalModel
+      - package: SermonSetSpeech
+        product: SermonSetSpeech
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.gazhenko.sermonset
+        PRODUCT_BUNDLE_IDENTIFIER: com.gazhenko.$(APP_BRAND:lower)
         INFOPLIST_FILE: SermonSet/Support/Info.plist
+        CODE_SIGN_ENTITLEMENTS: SermonSet/Support/SermonSet.entitlements
         GENERATE_INFOPLIST_FILE: NO
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
-        ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES: "AppIcon-Rubric AppIcon-Vespers AppIcon-Lumen"
+        ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES: "AppIcon-Riso AppIcon-Rubric AppIcon-Vespers AppIcon-Lumen AppIcon-Midnight"
   SermonSetUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -47,7 +60,7 @@ targets:
       - target: SermonSet
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.gazhenko.sermonset.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: com.gazhenko.$(APP_BRAND:lower).uitests
         GENERATE_INFOPLIST_FILE: YES
   SermonSetCoreChecks:
     type: bundle.unit-test
@@ -78,5 +91,15 @@ schemes:
         SermonSetCoreChecks: all
     test:
       config: Debug
+      targets:
+        - SermonSetCoreChecks
+  SermonSetCoreIntegration:
+    build:
+      targets:
+        SermonSetCoreChecks: all
+    test:
+      config: Debug
+      environmentVariables:
+        SERMONSET_INTEGRATION_URL: http://127.0.0.1:8788
       targets:
         - SermonSetCoreChecks

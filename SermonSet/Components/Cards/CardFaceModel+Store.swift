@@ -19,8 +19,8 @@ extension CardFaceModel {
             typeKey: sermon.sermonType?.rawValue,
             typeName: sermon.sermonType?.displayName ?? "Sermon",
             dateText: Format.date(sermon.serviceDate),
-            editionText: sermon.isSample ? "Sample edition" : (edition?.editionLabel == "Sample" ? "Sample edition" : "Personal edition"),
-            serialText: String(format: "%03d", serial),
+            editionText: Self.editionText(sermon: sermon, label: edition?.editionLabel),
+            serialText: String(format: "%03d", card?.serial ?? serial),
             seed: edition?.designSeed ?? Self.stableSeed(sermon.id),
             bigIdea: sermon.summary?.isEmpty == false ? sermon.summary : nil,
             reflection: sermon.reflectionPrompt?.isEmpty == false ? sermon.reflectionPrompt : nil,
@@ -45,6 +45,12 @@ extension CardFaceModel {
             .filter { !$0.sermon.isSample }
             .sorted { $0.history.firstEncounteredAt < $1.history.firstEncounteredAt }
         return (own.firstIndex { $0.id == sermon.id } ?? own.count) + 1
+    }
+
+    static func editionText(sermon: Sermon, label: String?) -> String {
+        if sermon.isSample || label == "Sample" { return "Sample edition" }
+        if let label, ["Community", "Church"].contains(label) { return "\(label) edition" }
+        return "Personal edition"
     }
 
     static func stableSeed(_ id: UUID) -> Int {

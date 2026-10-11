@@ -1,6 +1,8 @@
 #!/bin/bash
 # Films the trailer tour on an iOS Simulator.
-# Usage: SIM_UDID=<simulator> tools/trailer/record.sh
+# Usage: SIM_UDID=<simulator> [SOWER_SERVER=http://127.0.0.1:8789] tools/trailer/record.sh
+# With SOWER_SERVER (a seeded local server), the app first joins the community and keeps two
+# shared sermons so the Discover and trading scenes have something to show.
 # Writes build/trailer/raw.mov (screen recording) and build/trailer/marks.txt (scene timestamps).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -16,9 +18,14 @@ xcrun simctl ui "$SIM" appearance light
 /opt/homebrew/bin/xcodegen generate --quiet
 
 common=(-project SermonSet.xcodeproj -scheme SermonSet -destination "platform=iOS Simulator,id=$SIM"
-        -derivedDataPath "$DD" -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO
-        -only-testing:SermonSetUITests/TrailerTour)
-xcodebuild "${common[@]}" build-for-testing > "$OUT/build.log" 2>&1
+        -derivedDataPath "$DD" -disableAutomaticPackageResolution)
+xcodebuild "${common[@]}" -only-testing:SermonSetUITests/TrailerTour build-for-testing > "$OUT/build.log" 2>&1
+
+export TEST_RUNNER_SOWER_TRAILER_DIR="$OUT/appdata-$(date +%s)"
+if [ -n "${SOWER_SERVER:-}" ]; then
+  TEST_RUNNER_SERMONSET_TRAILER_SETUP=1 TEST_RUNNER_SOWER_SERVER="$SOWER_SERVER" xcodebuild "${common[@]}" \
+    -only-testing:SermonSetUITests/TrailerTour/testPrepareCommunity test-without-building > "$OUT/setup.log" 2>&1 || true
+fi
 
 rm -f "$OUT/raw.mov" "$OUT/rec.log"
 xcrun simctl io "$SIM" recordVideo --codec=h264 --force "$OUT/raw.mov" > "$OUT/rec.log" 2>&1 &
@@ -26,7 +33,8 @@ REC=$!
 until grep -q "Recording started" "$OUT/rec.log" 2>/dev/null; do sleep 0.05; done
 REC_START=$(python3 -c 'import time; print(f"{time.time():.3f}")')
 
-TEST_RUNNER_SERMONSET_TRAILER=1 xcodebuild "${common[@]}" test-without-building > "$OUT/tour.log" 2>&1 || true
+TEST_RUNNER_SERMONSET_TRAILER=1 TEST_RUNNER_SOWER_SERVER="${SOWER_SERVER:-}" xcodebuild "${common[@]}" \
+  -only-testing:SermonSetUITests/TrailerTour/testTour test-without-building > "$OUT/tour.log" 2>&1 || true
 sleep 1
 kill -INT "$REC"
 wait "$REC" || true

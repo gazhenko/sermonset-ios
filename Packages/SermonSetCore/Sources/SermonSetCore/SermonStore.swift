@@ -6,7 +6,17 @@ import Observation
     public private(set) var lastError: SermonSetError?
     public internal(set) var capabilities = CapabilityReport(speechTranscription: .unavailable(reason: "Checking on-device speech availability."), onDeviceLanguageModel: .unavailable(reason: "Checking on-device model availability."))
     @ObservationIgnored var transcriptionAdapter: any TranscriptionAdapter = SpeechAnalyzerAdapter()
+    @ObservationIgnored var parakeetTranscriptionFactory: (@MainActor @Sendable (String) -> any TranscriptionAdapter)?
+    public internal(set) var transcriptionFallbackReason: String?
+    public internal(set) var transcriptionFallbackDebugDetail: String?
     @ObservationIgnored var insightsAdapter: any InsightsAdapter = FoundationModelInsightsAdapter()
+    @ObservationIgnored var appleNotesEngine: any SermonNotesEngine
+    @ObservationIgnored var openSourceNotesEngine: (any SermonNotesEngine)?
+    public internal(set) var notesStageDetail: String?
+    @ObservationIgnored var notesStageSermonID: UUID?
+    @ObservationIgnored var recordingTasks: [UUID: Task<Void, Never>] = [:]
+    @ObservationIgnored var recordingBackground: [UUID: RecordingProcessingBackground] = [:]
+    @ObservationIgnored var processingForegroundObserver: (any NSObjectProtocol)?
     var processingJobs: [UUID: ProcessingJobs] = [:]
     @ObservationIgnored let configuration: StoreConfiguration
     @ObservationIgnored let root: URL
@@ -19,7 +29,9 @@ import Observation
     var exportsDirectory: URL { FileManager.default.temporaryDirectory.appendingPathComponent("SermonSetExports-\(LocalFiles.seed(root.path))", isDirectory: true) }
     var storeURL: URL { root.appendingPathComponent("store.json") }
 
-    public init(configuration: StoreConfiguration) {
+    public init(configuration: StoreConfiguration, notesEngine: any SermonNotesEngine = FoundationModelSermonNotesEngine(), openSourceNotesEngine: (any SermonNotesEngine)? = nil) {
+        self.appleNotesEngine = notesEngine
+        self.openSourceNotesEngine = openSourceNotesEngine
         self.configuration = configuration
         samples = SampleCatalog.load()
         switch configuration {
@@ -45,13 +57,18 @@ import Observation
                     try LocalFiles.protect(preserved)
                     writesBlocked = true
                     document = StoreDocument()
-                    throw SermonSetError(title: "Library needs recovery", message: "The library could not be read. The original file and a recovery copy are preserved; saving is disabled until you erase or restore the library.", recoverySuggestion: "Keep a copy of the SermonSet folder before restoring data.")
+                    throw SermonSetError(title: "Library needs recovery", message: "The library could not be read. The original file and a recovery copy are preserved; saving is disabled until you erase or restore the library.", recoverySuggestion: "Keep a copy of the library folder before restoring data.")
                 }
             }
             try applyBackup(document.backupPreference)
             if configuration == .preview { try preloadPreview() }
         } catch { writesBlocked = true; lastError = Self.error(error) }
         Task { [weak self] in await self?.refreshCapabilities() }
+        if configuration == .live { observeProcessingForeground(); Task { [weak self] in await self?.resumePendingRecordingProcessing(); await self?.runNotesLaunchArgument() } }
+    }
+
+    isolated deinit {
+        if let observer = processingForegroundObserver { NotificationCenter.default.removeObserver(observer) }
     }
 
     public var libraryEntries: [LibraryEntry] {
@@ -126,17 +143,21 @@ import Observation
     }
     public func updateSermon(_ sermon: Sermon) throws {
         var current = try requireSermon(sermon.id)
-        current.title = sermon.title; current.preacher = sermon.preacher; current.venue = sermon.venue
+        current.title = sermon.title; current.preacher = sermon.preacher; current.venue = Self.privacySafeVenue(sermon.venue)
         current.serviceDate = sermon.serviceDate
         current.primaryPassage = sermon.primaryPassage; current.sermonType = sermon.sermonType; current.themes = sermon.themes
         current.summary = sermon.summary; current.reflectionPrompt = sermon.reflectionPrompt; current.updatedAt = .now
         try transaction { $0.sermons[current.id] = current }
     }
     static func remove(_ id: UUID, from state: inout StoreDocument) {
+        state.pendingRecordingProcessing?.remove(id)
         state.sermons[id] = nil; state.history[id] = nil; state.editions[id] = nil; state.transcripts[id] = nil; state.insights[id] = nil
         state.cards = state.cards.filter { $0.value.sermonID != id }; state.moments = state.moments.filter { $0.value.sermonID != id }; state.notes = state.notes.filter { $0.value.sermonID != id }
         let assets = state.audio.values.filter { $0.sermonID == id }.map(\.id)
-        for asset in assets { state.audio[asset] = nil; state.audioPaths[asset] = nil }
+        for asset in assets { state.audio[asset] = nil; state.audioPaths[asset] = nil; state.features?.trims[asset] = nil; state.features?.derivatives[asset] = nil }
+        state.features?.locales[id] = nil; state.features?.serviceTokens?[id] = nil
+        let remainingPublications = state.features?.publications?.filter { $0.value.localSermonID != id }
+        state.features?.publications = remainingPublications
         state.finalizedSessions = state.finalizedSessions.filter { $0.value != id }
     }
     public func deleteSermon(_ id: UUID) throws {
@@ -148,6 +169,7 @@ import Observation
             + (document.transcripts[id] ?? []).map { jobsDirectory.appendingPathComponent("insights-\($0.id.uuidString).json") }
         let sessionFiles = document.finalizedSessions.filter { $0.value == id }.keys.map { sessionsDirectory.appendingPathComponent($0.uuidString) }
         try transaction { Self.remove(id, from: &$0) }
+        recordingTasks[id]?.cancel(); recordingBackground[id]?.finish(success: false)
         processingJobs[id] = nil
         AudioSessionCoordinator.libraryDidRemove(root: root, sermonID: id)
         do { for path in paths { let url = recordingsDirectory.appendingPathComponent(path); if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) } }; for url in jobFiles + sessionFiles where FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) } }
@@ -223,6 +245,7 @@ import Observation
         if let captureID = AudioSessionCoordinator.captureOwner, FileManager.default.fileExists(atPath: sessionsDirectory.appendingPathComponent(captureID.uuidString).path) {
             throw report(SermonSetError(title: "Recording is active", message: "Finish or discard the current recording before erasing the library."))
         }
+        for task in recordingTasks.values { task.cancel() }; for lease in recordingBackground.values { lease.finish(success: false) }
         AudioSessionCoordinator.libraryDidRemove(root: root, sermonID: nil)
         do {
             if FileManager.default.fileExists(atPath: exportsDirectory.path) { try FileManager.default.removeItem(at: exportsDirectory) }

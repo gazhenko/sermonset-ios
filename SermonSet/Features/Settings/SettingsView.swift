@@ -16,10 +16,11 @@ struct SettingsView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 30) {
                         VStack(alignment: .leading, spacing: 12) {
-                            LookSectionHeader("Look", detail: "Four directions for SermonSet. Everything works the same in each.")
+                            LookSectionHeader("Look", detail: "The \(AppBrand.name) house look, plus five more. Everything works the same in each.")
                             LookPicker()
                             AppIconPicker()
                         }
+                        CommunityAccountSection()
                         privacy
                         processing
                         samples
@@ -37,7 +38,7 @@ struct SettingsView: View {
             }
             .storeErrorAlert()
             .confirmationDialog("Erase everything on this iPhone?", isPresented: $confirmErase, titleVisibility: .visible) {
-                Button("Erase all SermonSet data", role: .destructive) { try? store.eraseAllData() }
+                Button("Erase all \(AppBrand.name) data", role: .destructive) { try? store.eraseAllData() }
             } message: {
                 Text("Recordings, notes, moments, and cards will be deleted. This can’t be undone.")
             }
@@ -51,7 +52,7 @@ struct SettingsView: View {
             LookSectionHeader("Privacy and backup")
             VStack(alignment: .leading, spacing: 10) {
                 PrivateBadge()
-                Text("Recordings, transcripts, notes, and moments stay on this iPhone. SermonSet has no account and no server, and never uploads anything on its own.")
+                Text("Recordings, transcripts, notes, and moments stay on this iPhone. \(AppBrand.name) never uploads anything on its own. Sharing is always something you choose, one sermon at a time.")
                     .font(look.type.callout)
                     .foregroundStyle(look.palette.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -61,21 +62,8 @@ struct SettingsView: View {
                 backupOption(.excludeFromBackup, title: "Keep out of backups", detail: "Recordings exist only on this iPhone. If it’s lost, they’re gone.")
             }
             .lookPanel(padding: 6)
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Other backup places").font(look.type.headline).foregroundStyle(look.palette.ink)
-                ForEach(["iCloud Drive", "Google Drive", "Dropbox"], id: \.self) { name in
-                    HStack {
-                        Text(name).font(look.type.body).foregroundStyle(look.palette.inkSecondary)
-                        Spacer()
-                        Text("Coming later").font(look.type.caption).foregroundStyle(look.palette.inkTertiary)
-                    }
-                    .padding(.vertical, 4)
-                    .accessibilityElement(children: .combine)
-                }
-                Text("Each will be something you choose to turn on. Nothing will sync by default.")
-                    .font(look.type.caption)
-                    .foregroundStyle(look.palette.inkTertiary)
-            }
+            BackupSection()
+                .lookPanel(padding: 16)
         }
     }
 
@@ -112,8 +100,20 @@ struct SettingsView: View {
             if case .needsDownload = store.capabilities.speechTranscription {
                 SpeechDownloadButton()
             }
-            capability("Apple Intelligence model", status: store.capabilities.onDeviceLanguageModel, detail: "Drafts takeaways from the transcript. Without it, SermonSet pulls key sentences instead.")
-            Text("If something isn’t available here, SermonSet skips it. It never sends your audio to a server instead.")
+            capability("Apple Intelligence model", status: store.capabilities.onDeviceLanguageModel, detail: "Writes sermon notes from the transcript. Without it, \(AppBrand.name) pulls key sentences instead and can’t write notes.")
+            Toggle(isOn: Binding(get: { store.summarizeAfterRecording }, set: { store.summarizeAfterRecording = $0 })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Write sermon notes after recording").font(look.type.headline).foregroundStyle(look.palette.ink)
+                    Text("When you stop, \(AppBrand.name) transcribes the sermon and writes notes on this iPhone: the big idea, the points, and what to do this week.")
+                        .font(look.type.caption)
+                        .foregroundStyle(look.palette.inkTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .tint(look.palette.accent)
+            TranscriptionEngineSection().padding(.top, 6)
+            NotesEngineSection().padding(.top, 6)
+            Text("If something isn’t available here, \(AppBrand.name) skips it. It never sends your audio to a server instead.")
                 .font(look.type.caption)
                 .foregroundStyle(look.palette.inkTertiary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -183,11 +183,12 @@ struct SettingsView: View {
     private var about: some View {
         VStack(alignment: .leading, spacing: 10) {
             LookSectionHeader("About")
-            Text("Trade the card. Keep the message.")
+            Text(AppBrand.tagline)
                 .font(look.type.title)
                 .lookDisplay(look)
                 .foregroundStyle(look.palette.ink)
             VStack(alignment: .leading, spacing: 6) {
+                Text(AppBrand.principle)
                 Text("Every feature is free, with no ads or purchases.")
                 Text("Trading a card never removes a sermon from your library.")
                 Text("Your notes never travel with a card.")
@@ -198,17 +199,17 @@ struct SettingsView: View {
             NavigationLink("Card lab") { LookLab(models: LookLab.sampleModels(store)) }
                 .font(look.type.callout)
                 .foregroundStyle(look.palette.accent)
-            Text("Prototype 0.1. Sample churches, preachers, and sermons are fictional.")
+            Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"). Sample churches, preachers, and sermons are fictional.")
                 .font(look.type.caption)
                 .foregroundStyle(look.palette.inkTertiary)
         }
     }
 }
 
-/// Four live previews; choosing one restyles the whole app immediately.
+/// Live previews of every look; choosing one restyles the whole app immediately.
 struct LookPicker: View {
     @Environment(SermonStore.self) private var store
-    @AppStorage(LookID.storageKey) private var lookRaw = LookID.riso.rawValue
+    @AppStorage(LookID.storageKey) private var lookRaw = LookID.sower.rawValue
 
     var body: some View {
         let model = store.discoverCatalog.first.map { CardFaceModel(sermon: $0, store: store) } ?? .preview
@@ -279,13 +280,13 @@ struct AppIconPicker: View {
     @State private var failure: String?
 
     private func iconName(_ id: LookID) -> String? {
-        id == .riso ? nil : "AppIcon-\(Look.of(id).name)"
+        id == .sower ? nil : "AppIcon-\(Look.of(id).name)"
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("App icon").font(look.type.headline).foregroundStyle(look.palette.ink)
-            HStack(spacing: 14) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 14) {
                 ForEach(LookID.allCases) { id in
                     let isOn = current == iconName(id)
                     Button {

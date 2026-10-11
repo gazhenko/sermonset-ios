@@ -1,0 +1,176 @@
+/* Sower web: a two-ink church zine on cream stock (the app's Riso look), tuned for reading and
+   for working consoles. One visual world, light only, set explicitly on every surface. */
+@import url("/assets/fonts.css");
+
+:root {
+  --paper: #F1ECDF;
+  --paper-2: #FBF8F0;
+  --paper-3: #E6DFCD;
+  --ink: #1B1A19;
+  --ink-2: #4A4642;
+  --ink-3: #7D776F;
+  --violet: #5A2EF5;
+  --coral: #FF5A47;
+  --lime: #E2FA3C;
+  --cobalt: #2747E6;
+  --green: #00824A;
+  --amber: #B45F00;
+  --display: "Anton", "Futura Condensed ExtraBold", "Arial Narrow", Impact, sans-serif;
+  --body: "Atkinson Hyperlegible", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --offset: 4px;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--paper); }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1.0625rem/1.6 var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+img, video, canvas, svg { max-width: 100%; }
+a { color: var(--violet); text-underline-offset: 3px; }
+a:hover { color: var(--ink); }
+:focus-visible { outline: 3px solid var(--violet); outline-offset: 3px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 66ch; }
+
+/* Display type: condensed poster capitals with a misregistered second pass. */
+.display {
+  font-family: var(--display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+  color: var(--violet);
+  text-shadow: 3px 2px 0 var(--coral);
+}
+.wordmark {
+  font-family: var(--display);
+  text-transform: uppercase;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--violet);
+  text-shadow: 2px 1px 0 var(--coral);
+  text-decoration: none;
+}
+
+.wrap { width: min(1120px, 100%); margin-inline: auto; padding-inline: 20px; }
+.stack { display: grid; gap: 16px; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.muted { color: var(--ink-2); }
+.faint { color: var(--ink-3); font-size: 0.9rem; }
+
+/* Surfaces: ink border plus a hard offset shadow, like a second print pass. */
+.panel {
+  background: var(--paper-2);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  box-shadow: var(--offset) var(--offset) 0 var(--ink);
+  padding: 20px;
+  min-width: 0;
+}
+.panel.quiet { box-shadow: none; border-width: 1.5px; }
+
+/* Buttons */
+.btn {
+  appearance: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: 700 1rem/1 var(--body);
+  padding: 12px 18px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper-2);
+  color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+.btn:hover { color: var(--ink); }
+.btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+.btn.primary { background: var(--violet); color: var(--paper-2); }
+.btn.danger { background: var(--coral); color: var(--ink); }
+.btn.lime { background: var(--lime); }
+.btn.link { border: 0; box-shadow: none; background: none; padding: 6px 4px; color: var(--violet); text-decoration: underline; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; box-shadow: 3px 3px 0 var(--ink); }
+
+/* Forms */
+label { display: grid; gap: 6px; font-weight: 700; font-size: .95rem; }
+label .hint { font-weight: 400; color: var(--ink-2); font-size: .875rem; }
+input, select, textarea {
+  font: 400 1rem/1.4 var(--body);
+  color: var(--ink);
+  background: #FFFDF7;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  padding: 10px 12px;
+  width: 100%;
+  min-width: 0;
+}
+textarea { min-height: 96px; resize: vertical; }
+input[type="checkbox"], input[type="radio"] { width: auto; accent-color: var(--violet); }
+.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; }
+.form-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+/* Tags and state chips: shape + text, never color alone. */
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 700 .8rem/1 var(--body);
+  padding: 5px 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: var(--paper-2);
+  white-space: nowrap;
+}
+.tag.lime { background: var(--lime); }
+.tag.violet { background: var(--violet); color: var(--paper-2); }
+.tag.coral { background: var(--coral); }
+.tag.ok::before { content: "✓"; }
+.tag.warn::before { content: "!"; }
+
+/* Tables */
+.table-wrap { overflow-x: auto; border: 2px solid var(--ink); border-radius: 8px; background: var(--paper-2); }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--paper-3); vertical-align: top; }
+th { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); background: var(--paper); }
+tr:last-child td { border-bottom: 0; }
+td.num { font-variant-numeric: tabular-nums; }
+
+/* Console shell */
+.topbar {
+  border-bottom: 2px solid var(--ink);
+  background: var(--paper-2);
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+}
+.topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; padding: 4px; background: var(--ink); border-radius: 8px; width: fit-content; max-width: 100%; }
+.tabs button {
+  font: 400 1.05rem/1 var(--display); text-transform: uppercase; letter-spacing: .02em;
+  background: transparent; color: var(--paper-2); border: 0; border-radius: 5px; padding: 10px 14px; cursor: pointer;
+}
+.tabs button[aria-selected="true"] { background: var(--lime); color: var(--ink); }
+.count { font: 700 .75rem/1 var(--body); background: var(--coral); color: var(--ink); border-radius: 999px; padding: 3px 7px; margin-left: 6px; }
+
+.notice { border: 2px solid var(--ink); border-radius: 8px; padding: 12px 14px; background: var(--lime); }
+.notice.error { background: var(--coral); }
+.notice.info { background: var(--paper-2); }
+
+dialog {
+  border: 2px solid var(--ink); border-radius: 10px; box-shadow: 6px 6px 0 var(--ink);
+  background: var(--paper-2); color: var(--ink); padding: 22px; width: min(560px, calc(100% - 32px));
+}
+dialog::backdrop { background: rgb(27 26 25 / .35); }
+
+.empty { padding: 32px 20px; text-align: center; color: var(--ink-2); }
+.empty strong { display: block; font: 400 1.6rem/1 var(--display); text-transform: uppercase; color: var(--ink); margin-bottom: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+.dialog-title { font-size: 1.8rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+[hidden] { display: none !important; }

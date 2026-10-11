@@ -2,7 +2,7 @@ import SermonSetCore
 import SwiftUI
 
 /// Opens a specific screen at launch for design review and screenshots:
-/// `-SermonSetScreen library|sermon|transcript|record|discover|pack|binder|atlas|card|settings|onboarding`
+/// `-SermonSetScreen library|sermon|transcript|record|discover|pack|binder|atlas|card|settings|inbox|offer|onboarding|import-file`
 enum DebugLaunchRoute {
     static var requested: String? {
         let args = ProcessInfo.processInfo.arguments
@@ -56,6 +56,24 @@ enum DebugLaunchRoute {
                     await store.generateInsights(sermonID: sermon.id)
                 }
             }
+        case "import-file":
+            // Imports Documents/<-SermonSetImportName> as the listener's own recording and runs the full
+            // after-recording pipeline (transcribe with the chosen engine, then notes), for engine evaluation.
+            Task {
+                let args = ProcessInfo.processInfo.arguments
+                guard let index = args.firstIndex(of: "-SermonSetImportName"), args.indices.contains(index + 1),
+                      let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+                let url = documents.appendingPathComponent(args[index + 1])
+                guard let sermon = try? await store.importAudio(from: url, title: url.deletingPathExtension().lastPathComponent) else { return }
+                router.openSermon(sermon.id)
+                NSLog("[import-file] engine=%@ capability=%@", store.transcriptionEngine.rawValue, String(describing: store.capabilities.speechTranscription))
+                await store.processRecording(sermonID: sermon.id)
+                let jobs = store.jobs(for: sermon.id)
+                NSLog("[import-file] transcription=%@ insights=%@ fallback=%@ lastError=%@ transcript=%@",
+                      String(describing: jobs.transcription), String(describing: jobs.insights),
+                      store.transcriptionFallbackReason ?? "-", store.lastError?.message ?? "-",
+                      store.transcript(for: sermon.id).map { "\($0.engine), \($0.segments.count) segments" } ?? "none")
+            }
         case "insights-demo":
             // Regenerates takeaways for a sample from its transcript with whatever on-device model is available.
             guard let first else { return }
@@ -69,6 +87,12 @@ enum DebugLaunchRoute {
             UserDefaults.standard.set("atlas", forKey: "SermonSetCollectionMode")
         case "card": router.cardViewerSermonID = store.binder.first?.sermonID ?? first
         case "settings": router.isSettingsPresented = true
+        case "inbox": router.isInboxPresented = true
+        case "receive": router.tab = .collection
+        case "offer":
+            // `-SermonSetScreen offer -SermonSetOfferToken <token>` opens the review sheet for a real token.
+            let args = ProcessInfo.processInfo.arguments
+            if let i = args.firstIndex(of: "-SermonSetOfferToken"), args.indices.contains(i + 1) { router.incomingOffer = IncomingOffer(token: args[i + 1]) }
         case "onboarding": UserDefaults.standard.set(false, forKey: "SermonSetOnboarded")
         default: break
         }

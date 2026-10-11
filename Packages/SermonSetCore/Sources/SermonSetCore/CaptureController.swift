@@ -74,7 +74,7 @@ import AVFoundation
             try AudioSessionCoordinator.beginCapture(manifest.id)
             let engine = makeEngine(kind)
             self.engine = engine
-            try engine.start(journal: journal, onFailure: { [weak self, sessionID = manifest.id] message in
+            try engine.start(journal: journal, onFailure: { @Sendable [weak self, sessionID = manifest.id] message in
                 Task { @MainActor [weak self] in self?.handleEngineFailure(message, sessionID: sessionID) }
             })
             elapsed = 0; level = 0; levelHistory = []; sessionMoments = []; sessionNotes = []; recoveryEvents = []
@@ -204,6 +204,7 @@ import AVFoundation
             state.history[sermon.id] = UserSermonHistory(sermonID: sermon.id, source: .recorded, firstEncounteredAt: manifest.startedAt)
             for var moment in manifest.moments { moment.time = min(moment.time, info.duration); state.moments[moment.id] = moment }
             for var note in manifest.notes { note.time = note.time.map { min($0, info.duration) }; state.notes[note.id] = note }
+            if state.features == nil { state.features = CoreFeatures() }; if state.features?.serviceTokens == nil { state.features?.serviceTokens = [:] }; state.features?.serviceTokens?[sermon.id] = manifest.draft.serviceToken
             state.finalizedSessions[manifest.id] = sermon.id
         }
         try journal.update { $0.completed = true }
@@ -270,7 +271,7 @@ import AVFoundation
     private func observeAudioSession() {
         #if os(iOS)
         let center = NotificationCenter.default
-        observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: nil) { [weak self] notification in
+        observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: nil) { @Sendable [weak self] notification in
             let type = (notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? NSNumber)?.uintValue
             let options = (notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? NSNumber)?.uintValue ?? 0
             Task { @MainActor [weak self] in
@@ -279,7 +280,7 @@ import AVFoundation
                 else if type == AVAudioSession.InterruptionType.ended.rawValue, self.isInterrupted, AVAudioSession.InterruptionOptions(rawValue: options).contains(.shouldResume) { try? self.resume() }
             }
         })
-        observers.append(center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil) { [weak self] notification in
+        observers.append(center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil) { @Sendable [weak self] notification in
             let reason = (notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? NSNumber)?.uintValue
             Task { @MainActor [weak self] in
                 guard let self, self.journal != nil else { return }
@@ -288,7 +289,7 @@ import AVFoundation
                 if self.kind == .live, self.phase == .recording, [AVAudioSession.RouteChangeReason.newDeviceAvailable.rawValue, AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue, AVAudioSession.RouteChangeReason.override.rawValue].contains(reason ?? 0) { self.interrupt("Audio route changed"); try? self.resume() }
             }
         })
-        observers.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: nil) { [weak self] _ in
+        observers.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: nil) { @Sendable [weak self] _ in
             Task { @MainActor [weak self] in self?.interrupt("Audio services reset; recording paused") }
         })
         #endif

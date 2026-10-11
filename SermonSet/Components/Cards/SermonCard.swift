@@ -12,6 +12,8 @@ struct SermonCardFace: View {
 
     var body: some View {
         switch (lookID ?? environmentLook.id, side) {
+        case (.sower, .front): SowerCardFront(model: model)
+        case (.sower, .back): SowerCardBack(model: model)
         case (.riso, .front): RisoCardFront(model: model)
         case (.riso, .back): RisoCardBack(model: model)
         case (.rubric, .front): RubricCardFront(model: model)
@@ -20,6 +22,8 @@ struct SermonCardFace: View {
         case (.vespers, .back): VespersCardBack(model: model, tilt: tilt)
         case (.lumen, .front): LumenCardFront(model: model, tilt: tilt)
         case (.lumen, .back): LumenCardBack(model: model, tilt: tilt)
+        case (.midnight, .front): MidnightCardFront(model: model)
+        case (.midnight, .back): MidnightCardBack(model: model)
         }
     }
 }

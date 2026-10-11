@@ -32,7 +32,8 @@ case "$ACTION" in
   run)
     generate; xcode build; boot
     xcrun simctl install "$SIM_UDID" "$DERIVED_DATA/Build/Products/Debug-iphonesimulator/SermonSet.app"
-    xcrun simctl launch --terminate-running-process "$SIM_UDID" com.gazhenko.sermonset "$@"
+    local_bundle=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$DERIVED_DATA/Build/Products/Debug-iphonesimulator/SermonSet.app/Info.plist")
+    xcrun simctl launch --terminate-running-process "$SIM_UDID" "$local_bundle" "$@"
     ;;
   screenshot)
     [[ $# == 1 ]] || { echo 'Usage: scripts/dev.sh screenshot <png>' >&2; exit 2; }

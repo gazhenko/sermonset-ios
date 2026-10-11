@@ -243,17 +243,17 @@ import Testing
         let store = SermonStore(configuration: .uiTest(directory: root)), capture = CaptureController(store: store, engine: .simulated)
         try await capture.start(CaptureDraft())
         try await Task.sleep(for: .milliseconds(250))
-        NotificationCenter.default.post(name: AVAudioSession.interruptionNotification, object: nil, userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue])
+        await postFromBackground(AVAudioSession.interruptionNotification, userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue])
         try await Task.sleep(for: .milliseconds(100))
         if case .interrupted = capture.phase {} else { Issue.record("Expected interrupted capture") }
         let elapsed = capture.elapsed
         try await Task.sleep(for: .milliseconds(150)); #expect(capture.elapsed == elapsed)
-        NotificationCenter.default.post(name: AVAudioSession.interruptionNotification, object: nil, userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.ended.rawValue, AVAudioSessionInterruptionOptionKey: AVAudioSession.InterruptionOptions.shouldResume.rawValue])
+        await postFromBackground(AVAudioSession.interruptionNotification, userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.ended.rawValue, AVAudioSessionInterruptionOptionKey: AVAudioSession.InterruptionOptions.shouldResume.rawValue])
         try await Task.sleep(for: .milliseconds(150)); #expect(capture.phase == .recording)
-        NotificationCenter.default.post(name: AVAudioSession.routeChangeNotification, object: nil)
+        await postFromBackground(AVAudioSession.routeChangeNotification)
         try await Task.sleep(for: .milliseconds(50))
         #expect(capture.recoveryEvents.contains { $0.contains("Audio route changed") })
-        NotificationCenter.default.post(name: AVAudioSession.mediaServicesWereResetNotification, object: nil)
+        await postFromBackground(AVAudioSession.mediaServicesWereResetNotification)
         try await Task.sleep(for: .milliseconds(100))
         if case .interrupted = capture.phase {} else { Issue.record("Expected media reset to pause capture") }
         try capture.resume(); try await Task.sleep(for: .milliseconds(150))
@@ -295,6 +295,26 @@ import Testing
         await capture.discard()
         playback.seek(to: playback.duration * 0.96)
         #expect(store.entry(for: id)?.history.completedAt != nil)
+        #if os(iOS)
+        playback.seek(to: 0); playback.play()
+        await postFromBackground(AVAudioSession.interruptionNotification, userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue])
+        try await Task.sleep(for: .milliseconds(100)); #expect(!playback.isPlaying)
+        await postFromBackground(AVAudioSession.interruptionNotification, userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.ended.rawValue, AVAudioSessionInterruptionOptionKey: AVAudioSession.InterruptionOptions.shouldResume.rawValue])
+        try await Task.sleep(for: .milliseconds(100)); #expect(playback.isPlaying)
+        await postFromBackground(AVAudioSession.routeChangeNotification, userInfo: [AVAudioSessionRouteChangeReasonKey: AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue])
+        try await Task.sleep(for: .milliseconds(100)); #expect(!playback.isPlaying)
+        await postFromBackground(AVAudioSession.mediaServicesWereResetNotification)
+        try await Task.sleep(for: .milliseconds(100)); #expect(playback.nowPlayingSermonID == nil)
+        #endif
         playback.stop(); #expect(playback.nowPlayingSermonID == nil)
+    }
+    nonisolated private func postFromBackground(_ name: Notification.Name, userInfo: [String: UInt] = [:]) async {
+        await withCheckedContinuation { continuation in
+            DispatchQueue(label: "SermonSetTests.audio-session").async {
+                #expect(!Thread.isMainThread)
+                NotificationCenter.default.post(name: name, object: nil, userInfo: userInfo)
+                continuation.resume()
+            }
+        }
     }
 }

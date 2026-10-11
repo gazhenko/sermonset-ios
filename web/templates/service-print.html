@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{service}} · {{churchName}} · {{brandName}}</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/assets/sower.css">
+<link rel="stylesheet" href="/assets/print.css">
+</head>
+<body>
+<div class="print-actions wrap">
+  <button class="btn primary" id="print" type="button">Print</button>
+  <span class="faint">Letter or A4. The code expires <time data-local datetime="{{expiresAt}}">{{expiresAt}}</time>.</span>
+</div>
+<main class="sheet">
+  <header class="sheet-head">
+    <p class="wordmark">{{brandName}}</p>
+    <h1 class="display">{{churchName}}</h1>
+    <p class="sheet-service">{{service}} · <time data-local datetime="{{startsAt}}">{{startsAt}}</time></p>
+  </header>
+  <div class="sheet-body">
+    <figure class="qr" id="qr" data-qr="{{qrValue}}" role="img" aria-label="QR code for this service">
+      <noscript><p>Turn on JavaScript to draw the QR code.</p></noscript>
+    </figure>
+    <section class="sheet-rules">
+      <h2>Scan with {{brandName}} before you record</h2>
+      <dl>
+        <div><dt>Recording for yourself</dt><dd>{{recordingAllowed}}</dd></div>
+        <div><dt>Sharing recordings publicly</dt><dd>{{publicSharingAllowed}}</dd></div>
+        <div><dt>Church reviews shared recordings first</dt><dd>{{reviewRequired}}</dd></div>
+      </dl>
+      <p>Your recording stays private on your phone unless you choose to share it. Please trim out music, prayer requests, and anything personal before sharing.</p>
+    </section>
+  </div>
+  <footer class="sheet-foot">Code {{serviceID}} · valid until <time data-local datetime="{{expiresAt}}">{{expiresAt}}</time> · the church can revoke it at any time</footer>
+</main>
+<script src="/assets/vendor/qrcode.js"></script>
+<script src="/assets/print.js"></script>
+</body>
+</html>

@@ -33,6 +33,7 @@ struct LibraryView: View {
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Title, preacher, church, or passage")
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
+                InboxToolbarButton()
                 Button { router.isImporterPresented = true } label: {
                     Image(systemName: "square.and.arrow.down")
                 }
@@ -107,9 +108,18 @@ struct ScreenTitle: View {
     var title: LocalizedStringKey
     var subtitle: String?
 
+    private var centered: Bool { look.id == .rubric || look.id == .sower }
+
     var body: some View {
-        VStack(alignment: look.id == .rubric ? .center : .leading, spacing: 6) {
+        VStack(alignment: centered ? .center : .leading, spacing: 6) {
             switch look.id {
+            case .sower:
+                Text(title)
+                    .font(SowerType.display(92, .largeTitle))
+                    .textCase(.uppercase)
+                    .foregroundStyle(look.palette.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
             case .riso:
                 ZStack(alignment: .topLeading) {
                     Text(title).foregroundStyle(look.palette.record).offset(x: 3, y: 2).accessibilityHidden(true)
@@ -138,15 +148,27 @@ struct ScreenTitle: View {
                 Text(title)
                     .font(.system(size: 40, weight: .heavy).width(.expanded))
                     .foregroundStyle(.white)
+            case .midnight:
+                // The working directory, with the cursor waiting after it.
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    Text(verbatim: "~/").foregroundStyle(look.palette.inkTertiary)
+                    Text(title).textCase(.lowercase).foregroundStyle(look.palette.ink)
+                    MidnightCursor()
+                }
+                .font(MidnightType.mono(40, .largeTitle, weight: .semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(title))
             }
             if let subtitle {
-                Text(subtitle)
+                Text(verbatim: look.id == .midnight ? "// \(subtitle)" : subtitle)
                     .font(look.id == .rubric ? look.type.caption : look.type.callout)
                     .foregroundStyle(look.palette.inkSecondary)
-                    .multilineTextAlignment(look.id == .rubric ? .center : .leading)
+                    .multilineTextAlignment(centered ? .center : .leading)
             }
         }
-        .frame(maxWidth: .infinity, alignment: look.id == .rubric ? .center : .leading)
+        .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
     }
@@ -175,8 +197,10 @@ struct FilterChips<Option: Hashable>: View where Option: FilterNamed {
 
     private func chip(_ text: String, isOn: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(verbatim: look.id == .rubric ? text.lowercased() : text)
-                .font(look.id == .rubric ? .custom("IowanOldStyle-Bold", 14, .callout).smallCaps() : look.type.callout.weight(.semibold))
+            Text(verbatim: look.id == .rubric ? text.lowercased() : look.id == .sower ? text.uppercased()
+                 : look.id == .midnight ? "--" + text.lowercased().replacingOccurrences(of: " ", with: "-") : text)
+                .font(look.id == .rubric ? .custom("IowanOldStyle-Bold", 14, .callout).smallCaps() : look.id == .sower ? SowerType.text(11, .callout, weight: .semibold, wide: true) : look.type.callout.weight(.semibold))
+                .tracking(look.id == .sower ? 1.2 : 0)
                 .accessibilityLabel(Text(verbatim: text))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
@@ -189,16 +213,20 @@ struct FilterChips<Option: Hashable>: View where Option: FilterNamed {
 
     private func chipText(_ isOn: Bool) -> Color {
         switch look.id {
+        case .sower: isOn ? look.palette.onAccent : look.palette.accent
         case .riso: look.palette.ink
         case .rubric: isOn ? look.palette.onAccent : look.palette.accent
         case .vespers: isOn ? look.palette.onAccent : look.palette.inkSecondary
         case .lumen: isOn ? look.palette.onAccent : .white
+        case .midnight: isOn ? look.palette.onAccent : look.palette.accent
         }
     }
 
     @ViewBuilder
     private func chipBackground(_ isOn: Bool) -> some View {
         switch look.id {
+        case .sower:
+            Rectangle().fill(isOn ? look.palette.accent : SowerInk.ghost)
         case .riso:
             RoundedRectangle(cornerRadius: 5)
                 .fill(isOn ? look.palette.moment : look.palette.surface)
@@ -215,6 +243,10 @@ struct FilterChips<Option: Hashable>: View where Option: FilterNamed {
             Capsule()
                 .fill(isOn ? look.palette.accent : .white.opacity(0.08))
                 .glassEffect(.regular, in: Capsule())
+        case .midnight:
+            RoundedRectangle(cornerRadius: 2)
+                .fill(isOn ? look.palette.accent : .clear)
+                .overlay(RoundedRectangle(cornerRadius: 2).strokeBorder(isOn ? .clear : look.palette.rule, lineWidth: 1))
         }
     }
 }

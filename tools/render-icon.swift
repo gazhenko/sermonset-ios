@@ -1,5 +1,5 @@
-// Renders the four SermonSet app icons (one per look) as 1024×1024 PNGs.
-// Usage: swift tools/render-icon.swift <output-directory>
+// Renders the alternate app icons (one per look) as 1024×1024 PNGs. The SOWER icon is the primary one.
+// Usage: swift tools/render-icon.swift <output-directory> [riso|rubric|vespers|lumen|midnight ...]
 import AppKit
 import SwiftUI
 
@@ -169,7 +169,38 @@ struct Lumen: View {
     }
 }
 
+/// A terminal at midnight: a glowing phosphor prompt over scanlines, three dim window buttons.
+struct Midnight: View {
+    let screen = hex(0x07090F), phosphor = hex(0x59F2A6), rule = hex(0x1F2A3B)
+    var body: some View {
+        ZStack {
+            screen
+            RadialGradient(colors: [hex(0x12204A, 0.85), .clear], center: .top, startRadius: 0, endRadius: 860)
+            Canvas { ctx, size in
+                var y: CGFloat = 0
+                while y < size.height {
+                    ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 3)), with: .color(.white.opacity(0.03)))
+                    y += 9
+                }
+            }
+            HStack(spacing: 26) {
+                ForEach(0..<3, id: \.self) { _ in Circle().fill(rule).frame(width: 44, height: 44) }
+            }
+            .position(x: 262, y: 236)
+            HStack(alignment: .firstTextBaseline, spacing: -18) {
+                Text(">")
+                Text("_")
+            }
+            .font(.system(size: 500, weight: .bold, design: .monospaced))
+            .foregroundStyle(phosphor)
+            .shadow(color: phosphor.opacity(0.6), radius: 46)
+            .offset(x: -6, y: 46)
+        }
+    }
+}
+
 let dir = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "."
+let only = Set(CommandLine.arguments.dropFirst(2))
 @MainActor func write<V: View>(_ view: V, _ name: String) {
     let r = ImageRenderer(content: view.frame(width: 1024, height: 1024).clipped())
     r.scale = 1
@@ -178,8 +209,10 @@ let dir = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "."
         print("wrote \(name).png")
 }
 MainActor.assumeIsolated {
-    write(Riso(), "icon-riso")
-    write(Rubric(), "icon-rubric")
-    write(Vespers(), "icon-vespers")
-    write(Lumen(), "icon-lumen")
+    @MainActor func render<V: View>(_ name: String, _ view: V) { if only.isEmpty || only.contains(name) { write(view, "icon-\(name)") } }
+    render("riso", Riso())
+    render("rubric", Rubric())
+    render("vespers", Vespers())
+    render("lumen", Lumen())
+    render("midnight", Midnight())
 }

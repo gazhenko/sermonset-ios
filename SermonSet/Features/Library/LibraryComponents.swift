@@ -27,7 +27,9 @@ struct LibraryHero: View {
             let started = position > 5 && entry.history.completedAt == nil
             VStack(alignment: .leading, spacing: 12) {
                 Text(started ? "Pick up where you left off" : (entry.history.source == .recorded && entry.history.lastListenedAt == nil ? "Listen back" : "Most recent"))
-                    .font(look.type.caption)
+                    .font(look.id == .sower ? SowerType.text(11, .caption, weight: .semibold, wide: true) : look.type.caption)
+                    .textCase(look.id == .sower ? .uppercase : nil)
+                    .tracking(look.id == .sower ? 1.2 : 0)
                     .foregroundStyle(look.id == .rubric ? look.palette.accent : look.palette.inkSecondary)
                 let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14)) : AnyLayout(HStackLayout(alignment: .top, spacing: 16))
                 layout {
@@ -38,7 +40,7 @@ struct LibraryHero: View {
                         .accessibilityHint("Opens the card")
                     VStack(alignment: .leading, spacing: 6) {
                         Text(Format.title(entry.sermon))
-                            .font(look.type.displayFace(look.id == .riso ? 30 : 24))
+                            .font(look.type.displayFace(look.id == .riso ? 30 : look.id == .sower ? 36 : 24))
                             .lookDisplay(look)
                             .foregroundStyle(look.palette.ink)
                             .lineLimit(3)
@@ -47,6 +49,13 @@ struct LibraryHero: View {
                             .font(look.type.callout)
                             .foregroundStyle(look.palette.inkSecondary)
                             .lineLimit(2)
+                        if let idea = store.insights(for: entry.id)?.notes?.bigIdea {
+                            Text(look.id == .midnight ? "> \(idea)" : "“\(idea)”")
+                                .font(look.type.callout.italic())
+                                .foregroundStyle(look.palette.ink)
+                                .lineLimit(3)
+                                .padding(.top, 2)
+                        }
                         if duration > 0 {
                             ProgressTrack(value: position / duration)
                                 .padding(.top, 4)
@@ -85,6 +94,9 @@ struct ProgressTrack: View {
             let width = proxy.size.width * CGFloat(max(0, min(1, value)))
             ZStack(alignment: .leading) {
                 switch look.id {
+                case .sower:
+                    Rectangle().fill(look.palette.rule).frame(height: 1)
+                    Rectangle().fill(look.palette.accent).frame(width: width, height: 3)
                 case .riso:
                     RoundedRectangle(cornerRadius: 2).fill(look.palette.ink)
                     RoundedRectangle(cornerRadius: 2).fill(look.palette.moment).frame(width: width).padding(2)
@@ -98,6 +110,17 @@ struct ProgressTrack: View {
                 case .lumen:
                     Capsule().fill(.white.opacity(0.18))
                     Capsule().fill(look.palette.accent).frame(width: width)
+                case .midnight:
+                    // Block cells, like a progress bar in a shell.
+                    Canvas { context, size in
+                        let cell: CGFloat = 4, gap: CGFloat = 2
+                        let count = max(1, Int((size.width + gap) / (cell + gap)))
+                        let filled = Int((Double(count) * max(0, min(1, value))).rounded())
+                        for i in 0..<count {
+                            let rect = CGRect(x: CGFloat(i) * (cell + gap), y: 0, width: cell, height: size.height)
+                            context.fill(Path(rect), with: .color(i < filled ? look.palette.accent : look.palette.rule))
+                        }
+                    }
                 }
             }
         }
@@ -219,10 +242,12 @@ struct LibraryRow: View {
     var body: some View {
         Group {
             switch look.id {
+            case .sower: sower
             case .riso: riso
             case .rubric: rubric
             case .vespers: vespers
             case .lumen: lumen
+            case .midnight: midnight
             }
         }
         .contentShape(Rectangle())
@@ -240,6 +265,47 @@ struct LibraryRow: View {
         if sermon.isSample { parts.append("Sample") }
         if progress >= 1 { parts.append("Finished") } else if progress > 0 { parts.append("\(Int(progress * 100)) percent listened") }
         return parts.joined(separator: ", ")
+    }
+
+    // SOWER: a ruled table row like the website — tall thin date, light compressed title, square tags.
+    private var sower: some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(look.palette.rule).frame(height: 1)
+            HStack(alignment: .top, spacing: 14) {
+                VStack(spacing: -4) {
+                    Text(sermon.serviceDate.formatted(.dateTime.day()))
+                        .font(SowerType.display(46, .title))
+                    Text(sermon.serviceDate.formatted(.dateTime.month(.abbreviated)).uppercased())
+                        .font(SowerType.text(9, .caption, weight: .semibold, wide: true))
+                        .tracking(1)
+                }
+                .foregroundStyle(look.palette.ink)
+                .frame(width: 52)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(Format.title(sermon))
+                        .font(SowerType.display(28, .title3, weight: .light))
+                        .foregroundStyle(look.palette.ink)
+                        .lineLimit(2)
+                    if !byline.isEmpty {
+                        Text(byline).font(look.type.caption).foregroundStyle(look.palette.inkSecondary).lineLimit(1)
+                    }
+                    HStack(spacing: 6) {
+                        if let passage = sermon.primaryPassage { LookTag(text: passage) }
+                        if entry.momentCount > 0 { LookTag(text: "\(entry.momentCount) marked") }
+                        if sermon.isSample { LookTag(text: "Sample") }
+                    }
+                    .padding(.top, 2)
+                }
+                Spacer(minLength: 0)
+                TypeSwatch(sermon: sermon, size: 46)
+            }
+            .padding(.vertical, 14)
+            if progress > 0 {
+                Rectangle().fill(look.palette.accent).frame(height: 2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .scaleEffect(x: progress, anchor: .leading)
+            }
+        }
     }
 
     // Riso: a ticket stub — type-colored date block, condensed title, lime tags.
@@ -336,6 +402,44 @@ struct LibraryRow: View {
         .overlay(alignment: .bottom) { Rectangle().fill(look.palette.rule).frame(height: 1) }
         .overlay(alignment: .topLeading) {
             Rectangle().fill(typeColor).frame(width: 3, height: 22).offset(x: -12, y: 18)
+        }
+    }
+
+    // Midnight: a `git log --graph` entry. The lane and the commit dot take the sermon's type color.
+    private var midnight: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(spacing: 0) {
+                Circle().fill(typeColor).frame(width: 9, height: 9).padding(.top, 5)
+                Rectangle().fill(typeColor.opacity(0.35)).frame(width: 1).frame(maxHeight: .infinity)
+            }
+            .frame(width: 12)
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(spacing: 8) {
+                    Text(sermon.serviceDate.formatted(.iso8601.year().month().day()))
+                        .foregroundStyle(look.palette.inkTertiary)
+                    if let type = sermon.sermonType?.rawValue {
+                        Text(verbatim: type).foregroundStyle(typeColor)
+                    }
+                    if sermon.isSample { Text(verbatim: "(sample)").foregroundStyle(look.palette.inkTertiary) }
+                }
+                .font(look.type.caption)
+                Text(Format.title(sermon))
+                    .font(look.type.headline)
+                    .foregroundStyle(look.palette.ink)
+                    .lineLimit(2)
+                if !byline.isEmpty {
+                    Text(byline).font(look.type.caption).foregroundStyle(look.palette.inkSecondary).lineLimit(1)
+                }
+                HStack(spacing: 6) {
+                    if let passage = sermon.primaryPassage { LookTag(text: passage, color: look.palette.inkSecondary) }
+                    if entry.momentCount > 0 { LookTag(text: "\(entry.momentCount) marked", color: look.palette.moment) }
+                }
+                if progress > 0 {
+                    MidnightProgressBar(value: progress, width: 14).padding(.top, 2)
+                }
+            }
+            .padding(.bottom, 14)
+            Spacer(minLength: 0)
         }
     }
 

@@ -93,12 +93,14 @@ final class SermonSetJourneyTests: XCTestCase {
         shot("06-after-relaunch")
     }
 
-    func testSamplesPackBinderAndTradePreviewKeepsTheSermon() {
-        launch(look: "riso")
+    func testSamplesPackAndBinderStayLocal() {
+        // No community server: the sample pack opens on the iPhone and sample cards can't be traded.
+        launch(look: "riso", extra: ["-SermonSetServer", "http://127.0.0.1:9"])
         tap(app.buttons["Explore with sample sermons"])
         XCTAssertTrue(element(containing: "2 sermons, kept for good").waitForExistence(timeout: 8))
 
         tap(app.buttons["Discover"])
+        XCTAssertTrue(element(containing: "A sample pack").waitForExistence(timeout: 8), "Without an account the pack is clearly labelled a sample")
         tap(app.buttons["Open pack"])
         tap(app.buttons["Tear it open"])
         tap(app.buttons["Reveal"])
@@ -109,23 +111,15 @@ final class SermonSetJourneyTests: XCTestCase {
         XCTAssertTrue(element(containing: "Added to your library and binder").waitForExistence(timeout: 8))
         shot("11-pack-kept")
         tap(app.buttons["Go to Library"])
-
-        let libraryCount = element(containing: "kept for good")
-        XCTAssertTrue(libraryCount.waitForExistence(timeout: 8))
-        let before = libraryCount.label
+        XCTAssertTrue(element(containing: "kept for good").waitForExistence(timeout: 8))
 
         tap(app.buttons["Collection"])
         let firstCard = app.buttons.matching(NSPredicate(format: "label CONTAINS ' card, '")).firstMatch
         tap(firstCard)
-        tap(app.buttons["Practice a trade"])
-        shot("12-trade-preview")
-        tap(app.buttons["Remove card from binder"])
-        XCTAssertTrue(element(containing: "The card left your binder").waitForExistence(timeout: 6))
-        shot("13-after-trade")
+        XCTAssertTrue(app.buttons["Listen"].waitForExistence(timeout: 6))
+        XCTAssertFalse(app.buttons["card.trade"].exists, "Sample cards stay on this iPhone and can't be traded")
+        shot("12-sample-card")
         tap(app.buttons["Close"])
-
-        tap(app.buttons["Library"])
-        XCTAssertEqual(libraryCount.label, before, "Trading a card never removes a sermon from the library")
     }
 
     func testOnboardingChoosesALookAndHandsOffToTheRecorder() {
@@ -165,8 +159,25 @@ final class SermonSetJourneyTests: XCTestCase {
         shot("31-recovered")
     }
 
+    func testVoiceFocusCopyCompareAndTrim() {
+        launch(look: "lumen")
+        tap(app.buttons["Explore with sample sermons"])
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Peace in the Storm,' OR label BEGINSWITH 'When Faith Gets Loud,'")).firstMatch
+        tap(row)
+        tap(app.buttons["Voice Focus & trim"])
+        tap(app.buttons["Make a Voice Focus copy"])
+        XCTAssertTrue(element(containing: "What changed").waitForExistence(timeout: 90), "Voice Focus renders a copy and reports what changed")
+        shot("50-voice-focus")
+        let voiceFocus = app.buttons["Voice Focus"].firstMatch
+        if voiceFocus.waitForExistence(timeout: 4) { voiceFocus.tap() }
+        app.swipeUp()
+        tap(app.buttons["Save trim"])
+        XCTAssertTrue(app.buttons["Trim saved"].waitForExistence(timeout: 6))
+        shot("51-trim")
+    }
+
     func testEveryLookRendersTheLibrary() {
-        for look in ["riso", "rubric", "vespers", "lumen"] {
+        for look in ["sower", "riso", "rubric", "vespers", "lumen", "midnight"] {
             launch(look: look, extra: ["-SermonSetPreviewData"])
             XCTAssertTrue(element(containing: "kept for good").waitForExistence(timeout: 8))
             shot("20-library-\(look)")

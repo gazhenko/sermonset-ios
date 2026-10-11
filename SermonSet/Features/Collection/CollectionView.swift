@@ -20,8 +20,12 @@ struct CollectionView: View {
                 ScreenTitle(title: "Collection", subtitle: mode == .binder ? binderSubtitle : "Where these messages were preached")
                 SegmentedSwitch(selection: $mode)
                 switch mode {
-                case .binder: BinderGrid()
-                case .atlas: AtlasView()
+                case .binder:
+                    BinderGrid()
+                    OffersSection()
+                case .atlas:
+                    AtlasView()
+                    CommunityAtlasSection()
                 }
             }
             .padding(.horizontal, 20)
@@ -29,7 +33,8 @@ struct CollectionView: View {
         }
         .scrollIndicators(.hidden)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                InboxToolbarButton()
                 Button { router.isSettingsPresented = true } label: { Image(systemName: "gearshape") }
                     .accessibilityLabel("Settings")
             }
@@ -49,12 +54,13 @@ struct SegmentedSwitch<Option: Hashable & Identifiable & CaseIterable & FilterNa
     @Binding var selection: Option
 
     var body: some View {
-        HStack(spacing: look.id == .riso ? 0 : 4) {
+        HStack(spacing: look.id == .riso || look.id == .sower ? 0 : 4) {
             ForEach(Option.allCases) { option in
                 let isOn = option == selection
                 Button { withAnimation(.snappy) { selection = option } } label: {
-                    Text(verbatim: look.id == .riso ? option.filterName.uppercased() : option.filterName)
-                        .font(look.id == .riso ? .custom("Futura-CondensedExtraBold", 20, .headline) : look.type.label)
+                    Text(verbatim: look.id == .riso || look.id == .sower ? option.filterName.uppercased() : option.filterName)
+                        .font(look.id == .riso ? .custom("Futura-CondensedExtraBold", 20, .headline) : look.id == .sower ? SowerType.text(12, .headline, weight: .semibold, wide: true) : look.type.label)
+                        .tracking(look.id == .sower ? 1.4 : 0)
                         .accessibilityLabel(Text(verbatim: option.filterName))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
@@ -66,32 +72,37 @@ struct SegmentedSwitch<Option: Hashable & Identifiable & CaseIterable & FilterNa
                 .accessibilityAddTraits(isOn ? [.isSelected, .isButton] : .isButton)
             }
         }
-        .padding(look.id == .riso ? 0 : 4)
+        .padding(look.id == .riso ? 0 : look.id == .sower ? 3 : 4)
         .background(container)
     }
 
     private func textColor(_ isOn: Bool) -> Color {
         switch look.id {
+        case .sower: isOn ? look.palette.onAccent : look.palette.accent
         case .riso: isOn ? look.palette.ink : look.palette.surface
         case .rubric: isOn ? look.palette.onAccent : look.palette.accent
         case .vespers: isOn ? look.palette.onAccent : look.palette.inkSecondary
         case .lumen: isOn ? look.palette.onAccent : .white
+        case .midnight: isOn ? look.palette.onAccent : look.palette.inkSecondary
         }
     }
 
     @ViewBuilder
     private func background(_ isOn: Bool) -> some View {
         switch look.id {
+        case .sower: Rectangle().fill(isOn ? look.palette.accent : .clear)
         case .riso: Rectangle().fill(isOn ? look.palette.moment : look.palette.ink)
         case .rubric: RoundedRectangle(cornerRadius: 2).fill(isOn ? look.palette.accent : .clear)
         case .vespers: Capsule().fill(isOn ? look.palette.accent : .clear)
         case .lumen: Capsule().fill(isOn ? look.palette.accent : .clear)
+        case .midnight: RoundedRectangle(cornerRadius: 2).fill(isOn ? look.palette.accent : .clear)
         }
     }
 
     @ViewBuilder
     private var container: some View {
         switch look.id {
+        case .sower: Rectangle().strokeBorder(look.palette.accent, lineWidth: 1)
         case .riso:
             RoundedRectangle(cornerRadius: 6).fill(look.palette.ink)
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(look.palette.ink, lineWidth: 2))
@@ -99,6 +110,9 @@ struct SegmentedSwitch<Option: Hashable & Identifiable & CaseIterable & FilterNa
         case .rubric: RoundedRectangle(cornerRadius: 3).strokeBorder(look.palette.accent, lineWidth: 1)
         case .vespers: Capsule().fill(look.palette.surface).overlay(Capsule().strokeBorder(look.palette.rule, lineWidth: 1))
         case .lumen: Capsule().fill(.clear).glassEffect(.regular, in: Capsule())
+        case .midnight:
+            RoundedRectangle(cornerRadius: 3).fill(look.palette.surface)
+                .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(look.palette.rule, lineWidth: 1))
         }
     }
 }
@@ -167,7 +181,7 @@ struct AtlasView: View {
         var filterName: String {
             switch self {
             case .recorded: "Recorded by me"
-            case .received: "Packs & shares"
+            case .received: "Kept & traded"
             case .samples: "Samples"
             }
         }
@@ -175,7 +189,7 @@ struct AtlasView: View {
         func includes(_ source: EncounterSource) -> Bool {
             switch self {
             case .recorded: source == .recorded || source == .imported
-            case .received: source == .sundayPack || source == .trade || source == .shared
+            case .received: source == .sundayPack || source == .trade || source == .shared || source == .discover
             case .samples: source == .sample
             }
         }
@@ -236,7 +250,7 @@ struct AtlasView: View {
                 .font(look.type.callout)
                 .foregroundStyle(look.palette.inkSecondary)
 
-            VStack(spacing: look.id == .rubric ? 0 : 10) {
+            VStack(spacing: look.id == .rubric || look.id == .sower ? 0 : 10) {
                 ForEach(places) { place in
                     placeRow(id: place.id, name: place.name, entries: place.entries)
                 }
@@ -297,11 +311,11 @@ struct AtlasView: View {
                 }
             }
         }
-        .padding(look.id == .rubric ? 0 : 14)
-        .padding(.vertical, look.id == .rubric ? 12 : 0)
+        .padding(look.id == .rubric || look.id == .sower ? 0 : 14)
+        .padding(.vertical, look.id == .rubric || look.id == .sower ? 12 : 0)
         .background(rowBackground)
         .overlay(alignment: .bottom) {
-            if look.id == .rubric { Rectangle().fill(look.palette.rule).frame(height: 1) }
+            if look.id == .rubric || look.id == .sower { Rectangle().fill(look.palette.rule).frame(height: 1) }
         }
     }
 
@@ -311,9 +325,12 @@ struct AtlasView: View {
         case .riso:
             RoundedRectangle(cornerRadius: 6).fill(look.palette.surface)
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(look.palette.ink, lineWidth: 2))
-        case .rubric: Color.clear
+        case .rubric, .sower: Color.clear
         case .vespers: RoundedRectangle(cornerRadius: 16, style: .continuous).fill(look.palette.surface.opacity(0.7))
         case .lumen: RoundedRectangle(cornerRadius: 22, style: .continuous).fill(.clear).glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        case .midnight:
+            Rectangle().fill(look.palette.surface)
+                .overlay(Rectangle().strokeBorder(look.palette.rule, lineWidth: 1))
         }
     }
 
@@ -321,10 +338,12 @@ struct AtlasView: View {
     private var mapFrame: some View {
         let shape = RoundedRectangle(cornerRadius: look.shape.largeRadius, style: .continuous)
         switch look.id {
+        case .sower: shape.strokeBorder(look.palette.ink, lineWidth: 1)
         case .riso: shape.strokeBorder(look.palette.ink, lineWidth: 2.5)
         case .rubric: shape.strokeBorder(look.palette.accent, lineWidth: 1)
         case .vespers: shape.strokeBorder(Color(hex: 0xE9C27A, opacity: 0.5), lineWidth: 1)
         case .lumen: shape.strokeBorder(.white.opacity(0.25), lineWidth: 0.5)
+        case .midnight: shape.strokeBorder(look.palette.accent.opacity(0.5), lineWidth: 1)
         }
     }
 }
@@ -336,6 +355,13 @@ struct AtlasPin: View {
     var body: some View {
         Group {
             switch look.id {
+            case .sower:
+                Text("\(count)")
+                    .font(SowerType.text(13, .headline, weight: .semibold))
+                    .foregroundStyle(look.palette.onAccent)
+                    .frame(width: 28, height: 28)
+                    .background(Rectangle().fill(look.palette.accent))
+                    .overlay(Rectangle().strokeBorder(look.palette.background, lineWidth: 1.5))
             case .riso:
                 Text("\(count)")
                     .font(.custom("Futura-CondensedExtraBold", 18, .headline))
@@ -362,6 +388,15 @@ struct AtlasPin: View {
                     .frame(width: 32, height: 32)
                     .background(Circle().fill(look.palette.accent))
                     .overlay(Circle().strokeBorder(.white.opacity(0.6), lineWidth: 1))
+            case .midnight:
+                // A map marker as a bracketed count: [3]
+                Text(verbatim: "[\(count)]")
+                    .font(.system(.caption, design: .monospaced, weight: .bold))
+                    .foregroundStyle(look.palette.onAccent)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 3)
+                    .background(RoundedRectangle(cornerRadius: 2).fill(look.palette.accent))
+                    .overlay(RoundedRectangle(cornerRadius: 2).strokeBorder(look.palette.background, lineWidth: 1))
             }
         }
         .accessibilityLabel(Text("\(count) \(count == 1 ? "sermon" : "sermons")"))

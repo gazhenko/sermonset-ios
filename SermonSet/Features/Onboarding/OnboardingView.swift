@@ -3,7 +3,7 @@ import SwiftUI
 
 enum OnboardingNext { case record, importAudio }
 
-/// Three short steps: what SermonSet promises, which look you want, and how to begin.
+/// Three short steps: what the app promises, which look you want, and how to begin.
 struct OnboardingView: View {
     @Environment(\.look) private var look
     @Environment(SermonStore.self) private var store
@@ -49,19 +49,22 @@ struct OnboardingView: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: 190)
                         .padding(.top, 24)
-                    Text("SermonSet")
+                    Text(AppBrand.name)
                         .font(look.type.displayFace(look.id == .riso ? 76 : 52))
                         .lookDisplay(look)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                         .fixedSize(horizontal: false, vertical: true)
                         .foregroundStyle(look.id == .riso ? look.palette.accent : look.palette.ink)
+                    Text(AppBrand.tagline)
+                        .font(look.type.headline)
+                        .foregroundStyle(look.id == .riso ? look.palette.record : look.palette.accent)
                     Text("Record sermons, come back to the moments that mattered, and collect cards that point back to the message.")
                         .font(look.type.body)
                         .foregroundStyle(look.palette.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                     VStack(alignment: .leading, spacing: 14) {
-                        promise("lock.fill", "Private on this iPhone", "No account, no uploads. You decide if anything is ever shared.")
+                        promise("lock.fill", "Private on this iPhone", "No account needed. Nothing uploads unless you choose to share it.")
                         promise("gift", "Free, always", "No ads, subscriptions, or paid packs.")
                         promise("books.vertical", "Trade the card, keep the message", "A sermon stays in your library even after its card moves on.")
                     }

@@ -1,0 +1,23 @@
+.print-actions { display: flex; gap: 14px; align-items: center; padding-block: 18px; }
+.sheet {
+  width: min(8.5in, 100% - 32px); margin: 0 auto 48px; background: #FFFFFF; color: #000000;
+  border: 2px solid var(--ink); border-radius: 12px; padding: 0.6in 0.6in 0.4in; display: grid; gap: 28px;
+}
+.sheet-head .display { font-size: clamp(2.4rem, 7vw, 3.8rem); color: #000000; text-shadow: 3px 2px 0 var(--coral); }
+.sheet-service { font-size: 1.3rem; font-weight: 700; }
+.sheet-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; }
+@media (max-width: 720px) { .sheet-body { grid-template-columns: 1fr; } }
+.qr { margin: 0; border: 3px solid #000000; padding: 10px; background: #FFFFFF; }
+.qr svg { display: block; width: 100%; height: auto; }
+.sheet-rules h2 { font: 400 1.8rem/1.05 var(--display); text-transform: uppercase; margin-bottom: 14px; }
+.sheet-rules dl { margin: 0 0 16px; display: grid; gap: 10px; }
+.sheet-rules dl div { display: flex; justify-content: space-between; gap: 16px; border-bottom: 2px solid #000000; padding-bottom: 8px; }
+.sheet-rules dt { font-weight: 700; }
+.sheet-rules dd { margin: 0; font: 400 1.4rem/1 var(--display); text-transform: uppercase; }
+.sheet-foot { font-size: .85rem; color: #333333; border-top: 1px solid #999999; padding-top: 10px; }
+@media print {
+  .print-actions { display: none; }
+  html, body { background: #FFFFFF; }
+  .sheet { border: 0; width: 100%; margin: 0; padding: 0; }
+  @page { margin: 0.5in; }
+}

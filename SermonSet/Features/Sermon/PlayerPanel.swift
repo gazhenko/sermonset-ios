@@ -8,6 +8,7 @@ struct PlayerPanel: View {
     @Environment(PlaybackController.self) private var playback
     var sermon: Sermon
     @State private var markedFlash: TimeInterval?
+    @State private var showingTools = false
 
     private var asset: AudioAsset? { store.audioAssets(for: sermon.id).first }
     private var isLoaded: Bool { playback.nowPlayingSermonID == sermon.id }
@@ -67,13 +68,24 @@ struct PlayerPanel: View {
 
                 HStack(spacing: 6) {
                     Image(systemName: sermon.rightsState.systemImage)
-                    Text(asset?.kind.displayName ?? "Audio")
+                    sourceLabel
                     if sermon.rightsState != .privateOnly {
                         Text("· \(sermon.rightsState.shortName)")
+                    }
+                    Spacer(minLength: 8)
+                    if store.isInLibrary(sermon.id) {
+                        Button { showingTools = true } label: {
+                            Label("Voice Focus & trim", systemImage: "slider.horizontal.3")
+                        }
+                        .font(look.type.caption.weight(.semibold))
+                        .foregroundStyle(look.palette.accent)
                     }
                 }
                 .font(look.type.caption)
                 .foregroundStyle(look.palette.inkTertiary)
+                if store.isInLibrary(sermon.id) {
+                    OfficialAudioOffer(sermon: sermon)
+                }
             }
         }
         .lookPanel(padding: 18)
@@ -91,6 +103,9 @@ struct PlayerPanel: View {
             }
         }
         .sensoryFeedback(.success, trigger: markedFlash)
+        .sheet(isPresented: $showingTools) {
+            AudioToolsSheet(sermon: sermon).lookScoped(look)
+        }
     }
 
     private var unavailableState: some View {
@@ -106,6 +121,36 @@ struct PlayerPanel: View {
                 .font(look.type.callout)
                 .foregroundStyle(look.palette.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    @ViewBuilder
+    private var sourceLabel: some View {
+        let assets = store.audioAssets(for: sermon.id)
+        let current = isLoaded ? (playback.activeAssetKind?.displayName ?? asset?.kind.displayName ?? "Audio") : (asset?.kind.displayName ?? "Audio")
+        if assets.count > 1 && store.isInLibrary(sermon.id) {
+            Menu {
+                ForEach(assets) { option in
+                    Button {
+                        if !isLoaded { playback.load(sermonID: sermon.id, autoplay: false) }
+                        try? playback.selectAudioAsset(option.id, levelMatched: option.kind != .official, acknowledgeMomentShift: true)
+                    } label: {
+                        if isLoaded && playback.activeAssetID == option.id {
+                            Label(option.kind.displayName, systemImage: "checkmark")
+                        } else {
+                            Text(option.kind.displayName)
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 3) {
+                    Text(current)
+                    Image(systemName: "chevron.up.chevron.down").font(.caption2)
+                }
+            }
+            .accessibilityLabel("Audio source, \(current)")
+        } else {
+            Text(current)
         }
     }
 
@@ -178,7 +223,7 @@ struct MomentIconStyle: ButtonStyle {
     }
 
     private var momentShape: some InsettableShape {
-        RoundedRectangle(cornerRadius: look.id == .rubric ? 2 : (look.id == .riso ? 6 : 23), style: .continuous)
+        RoundedRectangle(cornerRadius: look.id == .rubric || look.id == .sower || look.id == .midnight ? 2 : (look.id == .riso ? 6 : 23), style: .continuous)
     }
 }
 
@@ -234,6 +279,13 @@ struct Scrubber: View {
     private func track(width: CGFloat, fraction: Double) -> some View {
         let filled = width * CGFloat(min(1, max(0, fraction)))
         switch look.id {
+        case .sower:
+            ZStack(alignment: .leading) {
+                Rectangle().fill(look.palette.rule).frame(height: 1)
+                Rectangle().fill(look.palette.accent).frame(width: filled, height: 3)
+            }
+            .position(x: width / 2, y: 22)
+            .frame(width: width)
         case .riso:
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 3).fill(look.palette.ink).frame(height: 12)
@@ -264,6 +316,18 @@ struct Scrubber: View {
             }
             .position(x: width / 2, y: 22)
             .frame(width: width)
+        case .midnight:
+            // Block cells, phosphor up to the playhead.
+            Canvas { context, size in
+                let cell: CGFloat = 3, gap: CGFloat = 2, height: CGFloat = 8
+                var x: CGFloat = 0
+                while x + cell <= size.width {
+                    let rect = CGRect(x: x, y: (size.height - height) / 2, width: cell, height: height)
+                    context.fill(Path(rect), with: .color(x < filled ? look.palette.accent : look.palette.rule))
+                    x += cell + gap
+                }
+            }
+            .frame(width: width, height: 44)
         }
     }
 
@@ -272,6 +336,8 @@ struct Scrubber: View {
         switch look.id {
         case .rubric: RibbonTail().fill(look.palette.moment).frame(width: 6, height: 12)
         case .riso: Rectangle().fill(look.palette.ink).frame(width: 3, height: 10)
+        case .sower: Rectangle().fill(look.palette.ink).frame(width: 5, height: 5)
+        case .midnight: Rectangle().fill(look.palette.moment).frame(width: 2, height: 14)
         default: Circle().fill(look.palette.moment).frame(width: 6, height: 6)
         }
     }
@@ -279,6 +345,8 @@ struct Scrubber: View {
     @ViewBuilder
     private var knob: some View {
         switch look.id {
+        case .sower:
+            Rectangle().fill(look.palette.accent).frame(width: 3, height: 22)
         case .riso:
             RoundedRectangle(cornerRadius: 3).fill(look.palette.record)
                 .frame(width: 14, height: 26)
@@ -290,6 +358,72 @@ struct Scrubber: View {
                 .shadow(color: look.palette.accent, radius: 8)
         case .lumen:
             Capsule().fill(.white).frame(width: 22, height: 22).shadow(radius: 4)
+        case .midnight:
+            Rectangle().fill(look.palette.ink).frame(width: 7, height: 18)
+        }
+    }
+}
+
+/// When the church uploads its own recording of a sermon you shared, you can switch to it.
+struct OfficialAudioOffer: View {
+    @Environment(\.look) private var look
+    @Environment(SermonStore.self) private var store
+    @Environment(PlaybackController.self) private var playback
+    @Environment(CommunityController.self) private var community
+    @Environment(PublishingController.self) private var publishing
+    var sermon: Sermon
+    @State private var available = false
+    @State private var confirming = false
+    @State private var working = false
+    @State private var error: String?
+
+    private var remoteID: String? {
+        publishing.jobs.first { $0.localSermonID == sermon.id && $0.server == community.configuration.audience }?.communitySermonID
+    }
+    private var hasOfficial: Bool { store.audioAssets(for: sermon.id).contains { $0.kind == .official } }
+
+    var body: some View {
+        Group {
+            if available && !hasOfficial {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("The church published its own audio", systemImage: "building.columns")
+                        .font(look.type.headline).foregroundStyle(look.palette.ink)
+                    Text("Usually clearer than a recording from the pew. Your recording stays here either way.")
+                        .font(look.type.caption).foregroundStyle(look.palette.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button {
+                        confirming = true
+                    } label: {
+                        if working { ProgressView() } else { Text("Use the church’s audio") }
+                    }
+                    .buttonStyle(.look(.secondary))
+                    .disabled(working)
+                    if let error { Text(error).font(look.type.caption).foregroundStyle(look.palette.record) }
+                }
+                .padding(.top, 6)
+            }
+        }
+        .task(id: remoteID) {
+            guard let remoteID, let remote = try? await community.sermon(remoteID) else { return }
+            available = remote.trustLabels.contains("Official audio") && remote.audioAvailable
+        }
+        .confirmationDialog("Your moments may shift", isPresented: $confirming, titleVisibility: .visible) {
+            Button("Switch to the church’s audio") { Task { await switchSource() } }
+        } message: {
+            Text("Your moments were marked on your recording. The church’s audio may start at a different point, so they might not line up. You can switch back any time.")
+        }
+    }
+
+    private func switchSource() async {
+        guard let remoteID else { return }
+        working = true
+        error = nil
+        defer { working = false }
+        if playback.nowPlayingSermonID != sermon.id { playback.load(sermonID: sermon.id, autoplay: false) }
+        do {
+            try await playback.selectOfficialAudio(communitySermonID: remoteID, community: community, acknowledgeMomentShift: true)
+        } catch {
+            self.error = JoinCommunitySheet.message(error)
         }
     }
 }

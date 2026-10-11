@@ -93,6 +93,7 @@ extension EncounterSource {
         case .trade: "Received in a trade"
         case .shared: "Shared with you"
         case .sample: "Sample sermon"
+        case .discover: "Kept from Discover"
         }
     }
 
@@ -104,6 +105,7 @@ extension EncounterSource {
         case .trade: "Trades"
         case .shared: "Shared"
         case .sample: "Samples"
+        case .discover: "Discover"
         }
     }
 }

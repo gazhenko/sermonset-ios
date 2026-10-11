@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{title}} · {{brandName}}</title>
+<meta name="description" content="{{summary}}">
+<meta property="og:title" content="{{title}}">
+<meta property="og:description" content="{{summary}}">
+<meta property="og:image" content="{{imageURL}}">
+<meta property="og:url" content="{{shareURL}}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/assets/media/icon-riso.png">
+<link rel="stylesheet" href="/assets/sower.css">
+<link rel="stylesheet" href="/assets/share.css">
+</head>
+<body>
+<header class="share-top wrap">
+  <a class="wordmark" href="/">{{brandName}}</a>
+</header>
+<main class="wrap share">
+  <figure class="share-card">
+    <img src="{{imageURL}}" alt="The {{title}} card, by {{preacher}}" width="600" height="840">
+  </figure>
+  <section class="share-copy">
+    <p class="share-eyebrow">Someone thought you should hear this</p>
+    <h1 class="display share-title">{{title}}</h1>
+    <p class="share-by">{{preacher}} · {{churchName}} · {{city}}</p>
+    <p class="share-passage">{{passage}}</p>
+    <div class="share-block">
+      <h2>The big idea</h2>
+      <p>{{summary}}</p>
+    </div>
+    <div class="share-block">
+      <h2>To reflect on</h2>
+      <p>{{reflectionPrompt}}</p>
+    </div>
+    <p class="share-audio"><span class="tag">{{audioStatus}}</span></p>
+    <div class="row">
+      <a class="btn primary" href="{{appURL}}">Open in {{brandName}}</a>
+      <a class="btn" href="/">What’s {{brandName}}?</a>
+    </div>
+    <p class="faint">Listening happens in the {{brandName}} app. Keeping this sermon is free, and it stays in your library even if you later pass the card on.</p>
+    <p class="faint share-fiction">{{fictionalLabel}}</p>
+  </section>
+</main>
+</body>
+</html>

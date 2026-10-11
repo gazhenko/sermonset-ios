@@ -7,6 +7,7 @@ struct RootView: View {
     @Environment(SermonStore.self) private var store
     @Environment(CaptureController.self) private var capture
     @Environment(PlaybackController.self) private var playback
+    @Environment(CommunityPlaybackController.self) private var communityPlayback
     @Environment(AppRouter.self) private var router
     @AppStorage("SermonSetOnboarded") private var onboarded = false
     @State private var importError: SermonSetError?
@@ -32,13 +33,16 @@ struct RootView: View {
                 if capture.isActive && !router.isRecorderPresented {
                     RecordingPill { router.isRecorderPresented = true }
                         .transition(.move(edge: .bottom).combined(with: .opacity))
-                } else if playback.nowPlayingSermonID != nil {
+                } else if playback.nowPlayingSermonID != nil && !communityPlayback.isPlaying {
                     MiniPlayer()
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                } else {
+                    CommunityMiniPlayer()
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 BottomBar()
             }
-            .padding(.horizontal, look.id == .rubric ? 0 : 16)
+            .padding(.horizontal, look.id == .rubric || look.id == .sower ? 0 : 16)
             .animation(.snappy, value: capture.isActive)
             .animation(.snappy, value: playback.nowPlayingSermonID)
         }
@@ -53,6 +57,18 @@ struct RootView: View {
         }
         .sheet(isPresented: $router.isSettingsPresented) {
             SettingsView().lookScoped(look)
+        }
+        .sheet(isPresented: $router.isInboxPresented) {
+            InboxView().lookScoped(look)
+        }
+        .sheet(item: $router.communitySermon) { route in
+            CommunitySermonSheet(sermonID: route.id).lookScoped(look)
+        }
+        .sheet(item: $router.incomingOffer) { offer in
+            OfferReviewSheet(token: offer.token).lookScoped(look)
+        }
+        .sheet(item: openedOfferBinding) { item in
+            OfferReviewSheet(offerID: item.id).lookScoped(look)
         }
         .fullScreenCover(isPresented: onboardingBinding, onDismiss: {
             // Present the next screen only after onboarding has fully left the screen.
@@ -105,6 +121,10 @@ struct RootView: View {
 
     private var onboardingBinding: Binding<Bool> {
         Binding(get: { !onboarded }, set: { onboarded = !$0 })
+    }
+
+    private var openedOfferBinding: Binding<CommunitySermonRoute?> {
+        Binding(get: { router.openedOfferID.map(CommunitySermonRoute.init) }, set: { router.openedOfferID = $0?.id })
     }
 
     private var cardViewerBinding: Binding<IdentifiedUUID?> {
