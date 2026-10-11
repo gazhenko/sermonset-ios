@@ -52,7 +52,8 @@
       <li>Notes, marked moments, and your listening position.</li>
       <li>Your community signing key. It’s stored in the iPhone’s Keychain and protected by the Secure Enclave where available.</li>
     </ul>
-    <p>Transcription uses Apple’s on-device speech recognition. Summaries and takeaways are written by Apple Intelligence’s on-device language model, not Private Cloud Compute. Neither sends your audio or text to us or to anyone else.</p>
+    <p>Transcription runs on your iPhone, either with Parakeet (NVIDIA’s open-source speech model, which also tells speakers apart) or with Apple’s built-in speech recognition. Sermon notes are written on your iPhone by Apple Intelligence’s on-device model (not Private Cloud Compute) or, if you choose it, the open-source Qwen model. None of these send your audio or text to us or to anyone else.</p>
+    <p>The optional Parakeet and Qwen models are downloaded once from Hugging Face when you ask for them. That download sends nothing about you or your recordings; it only fetches the model files.</p>
 
     <h2>Location</h2>
     <p>When you tap “Suggest the church I’m at,” SOWER reads your location once and asks Apple Maps for churches nearby. Apple handles that search under its own privacy policy. SOWER doesn’t save your coordinates. A sermon keeps only the church or city you choose, or nothing if you choose “Private, no pin.”</p>
